@@ -1,0 +1,99 @@
+// Zhang All Rights Reserved.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Characters/CombatBaseCharacter.h"
+
+#include "GameplayTagContainer.h"
+
+#include "CombatHeroCharacter.generated.h"
+
+class USpringArmComponent;
+class UCameraComponent;
+class UDataAsset_InputConfig;
+struct FInputActionValue;
+class UHeroFightComponent;
+class UHeroUIComponent;
+
+/**
+ * 
+ */
+UCLASS()
+class COMBAT_API ACombatHeroCharacter : public ACombatBaseCharacter, public IPawnFightInterface
+{
+	GENERATED_BODY()
+	
+public:
+	ACombatHeroCharacter();
+
+protected:
+	//~ Begin APawn Interface.
+	virtual void PossessedBy(AController* NewController) override; // Load StartUpData
+	//~ End APawn Interface
+
+	// Set Up Input Component
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+private:
+
+#pragma region Components
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	USpringArmComponent* CameraBoom;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	UCameraComponent* FollowCamera;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Fight", meta = (AllowPrivateAccess = "true"))
+	UHeroFightComponent* HeroFightComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI", meta = (AllowPrivateAccess = "true"))
+	UHeroUIComponent* HeroUIComponent;
+
+#pragma endregion
+
+
+
+#pragma region Inputs
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "CharacterData", meta = (AllowPrivateAccess = "true"))
+	UDataAsset_InputConfig* InputConfigDataAsset = nullptr;
+
+#pragma endregion
+
+	UPROPERTY()
+	FVector2D SwitchDirection = FVector2D::ZeroVector;
+
+private:
+	void InitHeroStartUpData();
+
+#pragma region Inputs
+
+	void Input_Move(const FInputActionValue& InputActionValue);
+	void Input_Look(const FInputActionValue& InputActionValue);
+
+	void Input_SwitchTargetTriggered(const FInputActionValue& InputActionValue);
+	void Input_SwitchTargetCompleted(const FInputActionValue& InputActionValue);
+
+	void Input_PickUpStonesStarted(const FInputActionValue& InputActionValue);
+
+	void Input_AbilityInputPressed(FGameplayTag InInputTag);
+	void Input_AbilityInputReleased(FGameplayTag InInputTag);
+
+#pragma endregion
+
+protected:
+
+
+public:
+	FORCEINLINE UHeroFightComponent* GetHeroFightComponent() const { return HeroFightComponent; }
+
+	//~ Begin IPawnFightInterface Interface.
+	virtual UPawnFightComponent* GetPawnFightComponent() const override;
+	//~ End IPawnFightInterface Interface
+
+	//~ Begin IPawnUIInterface Interface.
+	virtual UPawnUIComponent* GetPawnUIComponent() const override;
+	//~ End IPawnUIInterface Interface
+};
