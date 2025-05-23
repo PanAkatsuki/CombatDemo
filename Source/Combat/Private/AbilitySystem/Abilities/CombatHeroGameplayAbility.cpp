@@ -90,3 +90,4 @@ bool UCombatHeroGameplayAbility::GetAbilityRemainingCooldownByTag(FGameplayTag I
     
     return RemainingCooldownTime > 0.f;
 }
+

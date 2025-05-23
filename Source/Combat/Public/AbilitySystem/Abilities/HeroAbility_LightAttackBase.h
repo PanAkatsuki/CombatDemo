@@ -43,6 +43,9 @@ protected:
 	void InitializeComboCount();
 
 	UFUNCTION(BlueprintCallable)
+	void ExecuteLightAttackGameplayCue(FGameplayTag& InGameplayCueTag);
+
+	UFUNCTION(BlueprintCallable)
 	void UpdateCurrentAttackComboCount();
 
 	// Navitve Function

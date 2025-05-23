@@ -9,6 +9,7 @@
 #include "TimerManager.h"
 #include "AbilitySystemComponent.h"
 #include "Components/Fight/HeroFightComponent.h"
+#include "AbilitySystem/CombatAbilitySystemComponent.h"
 
 #include "CombatDebugHelper.h"
 
@@ -37,6 +38,18 @@ void UHeroAbility_LightAttackBase::InitializeComboCount()
 	}
 
 	UsedAttackComboCount = CurrentAttackComboCount;
+}
+
+void UHeroAbility_LightAttackBase::ExecuteLightAttackGameplayCue(FGameplayTag& InGameplayCueTag)
+{
+	ACombatHeroCharacter* Hero = GetHeroCharacterFromActorInfo();
+
+	check(Hero);
+
+	if (UCombatAbilitySystemComponent* CASC = Hero->GetCombatAbilitySystemComponent())
+	{
+		CASC->ExecuteGameplayCue(InGameplayCueTag, FGameplayEffectContextHandle());
+	}
 }
 
 void UHeroAbility_LightAttackBase::UpdateCurrentAttackComboCount()

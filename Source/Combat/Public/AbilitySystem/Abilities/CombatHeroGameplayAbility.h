@@ -43,4 +43,5 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|Ability")
 	bool GetAbilityRemainingCooldownByTag(FGameplayTag InCooldownTag, float& TotalCooldownTime, float& RemainingCooldownTime);
 
+	
 };

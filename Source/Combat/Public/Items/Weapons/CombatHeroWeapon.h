@@ -30,5 +30,5 @@ public:
 	void AssignGrantedAbilitySpecHandles(const TArray<FGameplayAbilitySpecHandle>& InAbilitySpecHandles);
 
 	UFUNCTION(BlueprintPure)
-	TArray<FGameplayAbilitySpecHandle> GetGrantedAbilitySpecHandles() const;
+	TArray<FGameplayAbilitySpecHandle>& GetGrantedAbilitySpecHandles();
 }; 
