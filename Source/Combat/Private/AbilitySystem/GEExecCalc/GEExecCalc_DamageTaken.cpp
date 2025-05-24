@@ -9,24 +9,26 @@
 #include "CombatDebugHelper.h"
 
 
-/* Slow way of doing capture */
-
-//FProperty* AttackPowerProperty = FindFieldChecked<FProperty>(
-//	UCombatAttributeSet::StaticClass(),
-//	GET_MEMBER_NAME_CHECKED(UCombatAttributeSet, AttackPower)
-//);
-//
-//FGameplayEffectAttributeCaptureDefinition AttackPowerCaptureDifinition(
-//	AttackPowerProperty,
-//	EGameplayEffectAttributeCaptureSource::Source,
-//	false
-//);
-//
-//RelevantAttributesToCapture.Add(AttackPowerCaptureDifinition);
-
-
 struct FCombatDamageCapture
 {
+	/* Slow way of doing capture */
+
+	//FProperty* AttackPowerProperty = FindFieldChecked<FProperty>(
+	//	UCombatAttributeSet::StaticClass(),
+	//	GET_MEMBER_NAME_CHECKED(UCombatAttributeSet, AttackPower)
+	//);
+	//
+	//FGameplayEffectAttributeCaptureDefinition AttackPowerCaptureDifinition(
+	//	AttackPowerProperty,
+	//	EGameplayEffectAttributeCaptureSource::Source,
+	//	false
+	//);
+	//
+	//RelevantAttributesToCapture.Add(AttackPowerCaptureDifinition);
+	// 
+ 
+
+
 	// Do the same thing as 
 	//FProperty* AttackPowerProperty = FindFieldChecked<FProperty>(
 	//	UCombatAttributeSet::StaticClass(),
@@ -79,12 +81,28 @@ void UGEExecCalc_DamageTaken::Execute_Implementation(const FGameplayEffectCustom
 
 	/* Get Parameters */
 	float SourceAttackPower = 0.f;
-	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(GetCombatDamageCapture().AttackPowerDef, EvaluateParameters, SourceAttackPower);
-	//Debug::Print(TEXT("SourceAttackPower"), SourceAttackPower);
+	bool bSuccessfulCalculatedSourceAttackPower = ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(
+		GetCombatDamageCapture().AttackPowerDef, 
+		EvaluateParameters, 
+		SourceAttackPower
+	);
+	if (!bSuccessfulCalculatedSourceAttackPower)
+	{
+		check(0);
+	}
+	Debug::Print(TEXT("SourceAttackPower"), SourceAttackPower);
 
 	float TargetDefensePower = 0.f;
-	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(GetCombatDamageCapture().DefensePowerDef, EvaluateParameters, TargetDefensePower);
-	//Debug::Print(TEXT("TargetDefensePower"), TargetDefensePower);
+	bool bSuccessfulCalculatedTargetDefensePower = ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(
+		GetCombatDamageCapture().DefensePowerDef, 
+		EvaluateParameters, 
+		TargetDefensePower
+	);
+	if (!bSuccessfulCalculatedTargetDefensePower)
+	{
+		check(0);
+	}
+	Debug::Print(TEXT("TargetDefensePower"), TargetDefensePower);
 	
 	float BaseDamage = 0.f;
 	int32 UsedLightAttackComboCount = 0;
@@ -97,76 +115,68 @@ void UGEExecCalc_DamageTaken::Execute_Implementation(const FGameplayEffectCustom
 		if (TagMagnitude.Key.MatchesTagExact(CombatGameplayTags::Shared_SetByCaller_BaseDamage))
 		{
 			BaseDamage = TagMagnitude.Value;
-			//Debug::Print(TEXT("BaseDamage"), BaseDamage);
-
+			Debug::Print(TEXT("BaseDamage"), BaseDamage);
 		}
 
 		if (TagMagnitude.Key.MatchesTagExact(CombatGameplayTags::Player_SetByCaller_AttackType_Light))
 		{
 			UsedLightAttackComboCount = TagMagnitude.Value;
-			//Debug::Print(TEXT("UsedLightAttackComboCount"), UsedLightAttackComboCount);
-
+			Debug::Print(TEXT("UsedLightAttackComboCount"), UsedLightAttackComboCount);
 		}
 
 		if (TagMagnitude.Key.MatchesTagExact(CombatGameplayTags::Player_SetByCaller_AttackType_Heavy))
 		{
 			UsedHeavtAttackComboCount = TagMagnitude.Value;
-			//Debug::Print(TEXT("UsedHeavtAttackComboCount"), UsedHeavtAttackComboCount);
-
+			Debug::Print(TEXT("UsedHeavtAttackComboCount"), UsedHeavtAttackComboCount);
 		}
 
 		if (TagMagnitude.Key.MatchesTagExact(CombatGameplayTags::Player_SetByCaller_AttackType_CounterAttack))
 		{
 			UsedCounterAttackComboCount = TagMagnitude.Value;
-			//Debug::Print(TEXT("UsedCounterAttackComboCount"), UsedCounterAttackComboCount);
-
+			Debug::Print(TEXT("UsedCounterAttackComboCount"), UsedCounterAttackComboCount);
 		}
 
 		if (TagMagnitude.Key.MatchesTagExact(CombatGameplayTags::Player_SetByCaller_AttackType_SpecialWeaponAbility))
 		{
 			UsedSpecialWeaponAttackComboCount = TagMagnitude.Value;
-			//Debug::Print(TEXT("UsedSpecialWeaponAttackComboCount"), UsedSpecialWeaponAttackComboCount);
+			Debug::Print(TEXT("UsedSpecialWeaponAttackComboCount"), UsedSpecialWeaponAttackComboCount);
 		}
 	}
 
 	/* Calculate Zone */
-	// Shoule keep base DamageIncrease = 1.f
-	float DamageIncrease = 1.f;
+	// Shoule keep base DamageScaling = 1.f, for monster's attack calculate will not enter any if function below
+	float DamageScaling = 1.f;
 
 	if (UsedLightAttackComboCount != 0)
 	{
-		const float DamageIncreaseLight = (UsedLightAttackComboCount - 1) * 0.05f + 1.f;
-		DamageIncrease = DamageIncreaseLight;
-		//Debug::Print(TEXT("DamageIncreaseLight"), DamageIncreaseLight);
-
+		const float DamageIncrease = (UsedLightAttackComboCount - 1) * LightAttackComboDamageIncrease + LightAttackDamageScaling;
+		DamageScaling = DamageIncrease;
+		Debug::Print(TEXT("DamageIncreaseLight"), DamageIncrease);
 	}
 
 	if (UsedHeavtAttackComboCount != 0)
 	{
-		const float DamageIncreaseHeavy = (UsedHeavtAttackComboCount - 1) * 0.3f + 1.f;
-		DamageIncrease = DamageIncreaseHeavy;
-		//Debug::Print(TEXT("DamageIncreaseHeavy"), DamageIncreaseHeavy);
-
+		const float DamageIncrease = (UsedHeavtAttackComboCount - 1) * HeavyAttackComboDamageIncrease + HeavyAttackDamageScaling;
+		DamageScaling = DamageIncrease;
+		Debug::Print(TEXT("DamageIncreaseHeavy"), DamageIncrease);
 	}
 
 	if (UsedCounterAttackComboCount != 0)
 	{
-		const float DamageIncreaseCounterAttack = UsedCounterAttackComboCount * 3.0f + 1.f;
-		DamageIncrease = DamageIncreaseCounterAttack;
-		//Debug::Print(TEXT("DamageIncreaseCounterAttack"), DamageIncreaseCounterAttack);
-
+		const float DamageIncrease = (UsedCounterAttackComboCount - 1) * CounterAttackComboDamageIncrease + CounterAttackDamageScaling;
+		DamageScaling = DamageIncrease;
+		Debug::Print(TEXT("CounterAttackDamageScaling"), DamageScaling);
 	}
 
 	if (UsedSpecialWeaponAttackComboCount != 0)
 	{
-		const float DamageIncreaseSpecialWeaponAttack = UsedSpecialWeaponAttackComboCount * 2.0f + 1.f;
-		DamageIncrease = DamageIncreaseSpecialWeaponAttack;
-		//Debug::Print(TEXT("DamageIncreaseSpecialWeaponAttack"), DamageIncreaseSpecialWeaponAttack);
-
+		const float DamageIncrease = UsedSpecialWeaponAttackComboCount * SpecialAttackComboDamageIncrease + SpecialAttackDamageScaling;
+		DamageScaling = DamageIncrease;
+		Debug::Print(TEXT("DamageIncreaseSpecialWeaponAttack"), DamageIncrease);
 	}
 
-	const float FinalDamageDone = BaseDamage * SourceAttackPower * DamageIncrease / TargetDefensePower;
-	//Debug::Print(TEXT("FinalDamageDone"), FinalDamageDone);
+	const float FinalDamageDone = BaseDamage * SourceAttackPower * DamageScaling / TargetDefensePower;
+	Debug::Print(TEXT("FinalDamageDone"), FinalDamageDone);
 
 	if (FinalDamageDone > 0.f)
 	{

@@ -20,7 +20,7 @@ ACombatHeroWeapon* UHeroAbility_UnequipBase::GetCurrentEquippedWeapon()
 
 void UHeroAbility_UnequipBase::HandleUnequippedWeapon()
 {
-	//UnlinkAnimLayer();
+	UnlinkAnimLayer();
 
 	RemoveMappingContext();
 
@@ -51,7 +51,7 @@ void UHeroAbility_UnequipBase::RemoveMappingContext()
 
 	check(EnhancedInputLocalPlayerSubsystem);
 
-	// AddMappingContext to EnhancedInputLocalPlayerSubsystem
+	// RemoveMappingContext to EnhancedInputLocalPlayerSubsystem
 	EnhancedInputLocalPlayerSubsystem->RemoveMappingContext(HeroWeapon->HeroWeaponData.WeaponInputMappingContext);
 }
 
