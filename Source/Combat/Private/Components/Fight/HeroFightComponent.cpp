@@ -25,18 +25,15 @@ void UHeroFightComponent::OnHitTargetActor(AActor* HitActor)
 
     if (UCombatFunctionLibrary::NativeDoesActorHaveTag(GetOwner(), CombatGameplayTags::Player_Status_CounterAttacking))
     {
-        UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(), CombatGameplayTags::Player_Event_CounterAttack, EventData);
-        
+        UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(), CombatGameplayTags::Player_Event_CounterAttack, EventData); 
     }
     else if (UCombatFunctionLibrary::NativeDoesActorHaveTag(GetOwner(), CombatGameplayTags::Player_Status_SpecialAbilityAttacking))
     {
         UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(), CombatGameplayTags::Player_Event_SpecialAbilityAttack, EventData);
-
     }
     else
     {
         UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(), CombatGameplayTags::Shared_Event_MeleeHit, EventData);
-        
     }
 
     UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(), CombatGameplayTags::Player_Event_HitPause, FGameplayEventData());

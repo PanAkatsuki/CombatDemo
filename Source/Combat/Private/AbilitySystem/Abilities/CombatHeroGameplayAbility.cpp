@@ -57,7 +57,8 @@ FGameplayEffectSpecHandle UCombatHeroGameplayAbility::MakeHeroDamageEffectsSpecH
         EffectContextHandle
     );
     
-    // Make Map for calculation
+    // Make Map for calculation class to retrieve attribute
+    // Set base damage tag and base damage
     DamageEffectsSpecHandle.Data->SetSetByCallerMagnitude(
         CombatGameplayTags::Shared_SetByCaller_BaseDamage,
         InWeaponBaseDamage
@@ -65,6 +66,7 @@ FGameplayEffectSpecHandle UCombatHeroGameplayAbility::MakeHeroDamageEffectsSpecH
 
     if (InCurrentAttackTypeTag.IsValid())
     {
+        // Set attack type tag and used combo count
         DamageEffectsSpecHandle.Data->SetSetByCallerMagnitude(
             InCurrentAttackTypeTag, 
             InUsedComboCount

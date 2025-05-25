@@ -13,6 +13,10 @@
 #include "Components/BoxComponent.h"
 #include "CombatFunctionLibrary.h"
 #include "GameModes/CombatBaseGameMode.h"
+#include "AbilitySystem/CombatAbilitySystemComponent.h"
+#include "CombatGameplayTags.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "Items/Weapons/CombatWeaponBase.h"
 
 #include "CombatDebugHelper.h"
 
@@ -49,6 +53,11 @@ ACombatEnemyCharacter::ACombatEnemyCharacter()
 	EnemyHealthWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("EnemyHealthWidgetComponent"));
 	EnemyHealthWidgetComponent->SetupAttachment(this->GetMesh());
 
+	// Set LatentInfo
+	DestroyEnemyCharacterLatentInfo.CallbackTarget = this;
+	DestroyEnemyCharacterLatentInfo.ExecutionFunction = FName("OnSpawnStoneEnd");
+	DestroyEnemyCharacterLatentInfo.Linkage = 0;
+	DestroyEnemyCharacterLatentInfo.UUID = 2;
 }
 
 void ACombatEnemyCharacter::PossessedBy(AController* NewController)
@@ -139,6 +148,7 @@ void ACombatEnemyCharacter::InitEnemyStartUpData()
 		}
 	}
 
+	// Async Load
 	UAssetManager::GetStreamableManager().RequestAsyncLoad(
 		CharacterStartUpData.ToSoftObjectPath(),
 		FStreamableDelegate::CreateLambda(
@@ -161,4 +171,53 @@ UPawnFightComponent* ACombatEnemyCharacter::GetPawnFightComponent() const
 UPawnUIComponent* ACombatEnemyCharacter::GetPawnUIComponent() const
 {
 	return EnemyUIComponent;
+}
+
+void ACombatEnemyCharacter::SetNiagaraSystemOnMaterial()
+{
+	/*UAssetManager::GetStreamableManager().RequestAsyncLoad(
+		CharacterStartUpData.ToSoftObjectPath(),
+		FStreamableDelegate::CreateLambda(
+			[this, AbilityApplyLevel]()
+			{
+				if (UDataAsset_StartUpDataBase* LoadedData = CharacterStartUpData.Get())
+				{
+					LoadedData->GiveDataToAbilitySystemComponent(CombatAbilitySystemComponent, AbilityApplyLevel);
+				}
+			}
+		)
+	);*/
+}
+
+void ACombatEnemyCharacter::SetScalarParameterValueOnMaterial(float InParameterValue)
+{
+	USkeletalMeshComponent* SkeletalMeshComponent = GetMesh();
+
+	SkeletalMeshComponent->SetScalarParameterValueOnMaterials(FName("DissolveAmount"), InParameterValue);
+
+	if (ACombatWeaponBase* Weapon = GetEnemyFightComponent()->GetCharacterCurrentEquippedWeapon())
+	{
+		Weapon->GetWeaponMesh()->SetScalarParameterValueOnMaterials(FName("DissolveAmount"), InParameterValue);
+	}
+}
+
+void ACombatEnemyCharacter::DestroyEnemyCharacter()
+{
+	if (ACombatWeaponBase* EnemyWeapon = GetEnemyFightComponent()->GetCharacterCurrentEquippedWeapon())
+	{
+		EnemyWeapon->Destroy();
+	}
+
+	GetCombatAbilitySystemComponent()->TryAcitivateAbilityByTag(CombatGameplayTags::Enemy_Ability_SpawnStone);
+
+	UWorld* World = GEngine->GetWorldFromContextObject(this, EGetWorldErrorMode::LogAndReturnNull);
+
+	check(World);
+
+	UKismetSystemLibrary::Delay(World, DestroyEnemyCharacterDelayDuration, DestroyEnemyCharacterLatentInfo);
+}
+
+void ACombatEnemyCharacter::OnSpawnStoneEnd()
+{
+	this->Destroy();
 }

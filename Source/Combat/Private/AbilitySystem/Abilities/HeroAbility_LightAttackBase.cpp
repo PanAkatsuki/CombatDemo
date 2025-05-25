@@ -21,6 +21,8 @@ UHeroAbility_LightAttackBase::UHeroAbility_LightAttackBase()
 
 UAnimMontage* UHeroAbility_LightAttackBase::FindMontageToPlay()
 {
+	//Debug::Print(TEXT("CurrentAttackComboCount"), CurrentAttackComboCount);
+
 	UAnimMontage* const* MontagePtr = AttackMontagesMap.Find(CurrentAttackComboCount);
 
 	return MontagePtr ? *MontagePtr : nullptr;
@@ -54,16 +56,17 @@ void UHeroAbility_LightAttackBase::ExecuteLightAttackGameplayCue(FGameplayTag& I
 
 void UHeroAbility_LightAttackBase::UpdateCurrentAttackComboCount()
 {
+	AActor* Hero = Cast<AActor>(GetHeroCharacterFromActorInfo());
+
+	check(Hero);
+
 	if (CurrentAttackComboCount >= AttackMontagesMap.Num())
 	{
 		ResetCurrentAttackComboCount();
+		UCombatFunctionLibrary::RemoveGameplayTagFromActorIfFound(Hero, CombatGameplayTags::Player_Status_JumpToFinisher);
 	}
 	else
 	{
-		AActor* Hero = Cast<AActor>(GetHeroCharacterFromActorInfo());
-
-		check(Hero);
-
 		// Should Add Tag Jump to finisher
 		if (CurrentAttackComboCount == AttackMontagesMap.Num() - 1)
 		{

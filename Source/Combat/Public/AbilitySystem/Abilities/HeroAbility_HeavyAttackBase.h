@@ -36,4 +36,7 @@ protected:
 
 	UFUNCTION(BlueprintCallable)
 	void UpdateCurrentAttackComboCount();
+
+	// Navitve Function
+	void ResetCurrentAttackComboCount();
 };

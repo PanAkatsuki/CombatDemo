@@ -78,5 +78,28 @@ public:
 	virtual UPawnUIComponent* GetPawnUIComponent() const override;
 	//~ End IPawnUIInterface Interface
 
-	
+protected:
+	// Set Niagara System on enemy's material
+	UFUNCTION(BlueprintCallable)
+	void SetNiagaraSystemOnMaterial();
+
+	// Set death effect on enemy's material
+	UFUNCTION(BlueprintCallable)
+	void SetScalarParameterValueOnMaterial(float InParameterValue);
+
+	//~ For Destroy Character
+	// Set DestroyEnemyCharacterDelayDuration to make sure stone spawned before destroy Character
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	FLatentActionInfo DestroyEnemyCharacterLatentInfo;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	float DestroyEnemyCharacterDelayDuration = 0.5f;
+
+	UFUNCTION(BlueprintCallable)
+	void DestroyEnemyCharacter();
+
+	UFUNCTION()
+	void OnSpawnStoneEnd();
+	//~ For Destroy Character
+
 };

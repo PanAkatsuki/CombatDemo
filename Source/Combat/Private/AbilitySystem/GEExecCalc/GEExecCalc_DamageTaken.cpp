@@ -12,28 +12,13 @@
 struct FCombatDamageCapture
 {
 	/* Slow way of doing capture */
-
 	//FProperty* AttackPowerProperty = FindFieldChecked<FProperty>(
 	//	UCombatAttributeSet::StaticClass(),
 	//	GET_MEMBER_NAME_CHECKED(UCombatAttributeSet, AttackPower)
 	//);
-	//
-	//FGameplayEffectAttributeCaptureDefinition AttackPowerCaptureDifinition(
-	//	AttackPowerProperty,
-	//	EGameplayEffectAttributeCaptureSource::Source,
-	//	false
-	//);
-	//
-	//RelevantAttributesToCapture.Add(AttackPowerCaptureDifinition);
-	// 
- 
+	//...
 
-
-	// Do the same thing as 
-	//FProperty* AttackPowerProperty = FindFieldChecked<FProperty>(
-	//	UCombatAttributeSet::StaticClass(),
-	//	GET_MEMBER_NAME_CHECKED(UCombatAttributeSet, AttackPower)
-	//);
+	/* Fast way of doing capture */
 	DECLARE_ATTRIBUTE_CAPTUREDEF(AttackPower);
 	DECLARE_ATTRIBUTE_CAPTUREDEF(DefensePower);
 	DECLARE_ATTRIBUTE_CAPTUREDEF(DamageTaken);
@@ -41,12 +26,15 @@ struct FCombatDamageCapture
 
 	FCombatDamageCapture()
 	{
-		// Do the same thing as 
+		/* Slow way of doing capture */
 		//FGameplayEffectAttributeCaptureDefinition AttackPowerCaptureDifinition(
 		//	AttackPowerProperty,
 		//	EGameplayEffectAttributeCaptureSource::Source,
 		//	false
 		//);
+		//...
+
+		/* Fast way of doing capture */
 		DEFINE_ATTRIBUTE_CAPTUREDEF(UCombatAttributeSet, AttackPower, Source, false);
 		DEFINE_ATTRIBUTE_CAPTUREDEF(UCombatAttributeSet, DefensePower, Target, false);
 		DEFINE_ATTRIBUTE_CAPTUREDEF(UCombatAttributeSet, DamageTaken, Target, false);
@@ -80,6 +68,7 @@ void UGEExecCalc_DamageTaken::Execute_Implementation(const FGameplayEffectCustom
 	EvaluateParameters.TargetTags = EffectSpec.CapturedTargetTags.GetAggregatedTags();
 
 	/* Get Parameters */
+	// Get SourceAttackPower
 	float SourceAttackPower = 0.f;
 	bool bSuccessfulCalculatedSourceAttackPower = ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(
 		GetCombatDamageCapture().AttackPowerDef, 
@@ -90,8 +79,9 @@ void UGEExecCalc_DamageTaken::Execute_Implementation(const FGameplayEffectCustom
 	{
 		check(0);
 	}
-	Debug::Print(TEXT("SourceAttackPower"), SourceAttackPower);
+	//Debug::Print(TEXT("SourceAttackPower"), SourceAttackPower);
 
+	// GetTargetDefensePower
 	float TargetDefensePower = 0.f;
 	bool bSuccessfulCalculatedTargetDefensePower = ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(
 		GetCombatDamageCapture().DefensePowerDef, 
@@ -102,7 +92,7 @@ void UGEExecCalc_DamageTaken::Execute_Implementation(const FGameplayEffectCustom
 	{
 		check(0);
 	}
-	Debug::Print(TEXT("TargetDefensePower"), TargetDefensePower);
+	//Debug::Print(TEXT("TargetDefensePower"), TargetDefensePower);
 	
 	float BaseDamage = 0.f;
 	int32 UsedLightAttackComboCount = 0;
@@ -115,31 +105,31 @@ void UGEExecCalc_DamageTaken::Execute_Implementation(const FGameplayEffectCustom
 		if (TagMagnitude.Key.MatchesTagExact(CombatGameplayTags::Shared_SetByCaller_BaseDamage))
 		{
 			BaseDamage = TagMagnitude.Value;
-			Debug::Print(TEXT("BaseDamage"), BaseDamage);
+			//Debug::Print(TEXT("BaseDamage"), BaseDamage);
 		}
 
 		if (TagMagnitude.Key.MatchesTagExact(CombatGameplayTags::Player_SetByCaller_AttackType_Light))
 		{
 			UsedLightAttackComboCount = TagMagnitude.Value;
-			Debug::Print(TEXT("UsedLightAttackComboCount"), UsedLightAttackComboCount);
+			//Debug::Print(TEXT("UsedLightAttackComboCount"), UsedLightAttackComboCount);
 		}
 
 		if (TagMagnitude.Key.MatchesTagExact(CombatGameplayTags::Player_SetByCaller_AttackType_Heavy))
 		{
 			UsedHeavtAttackComboCount = TagMagnitude.Value;
-			Debug::Print(TEXT("UsedHeavtAttackComboCount"), UsedHeavtAttackComboCount);
+			//Debug::Print(TEXT("UsedHeavtAttackComboCount"), UsedHeavtAttackComboCount);
 		}
 
 		if (TagMagnitude.Key.MatchesTagExact(CombatGameplayTags::Player_SetByCaller_AttackType_CounterAttack))
 		{
 			UsedCounterAttackComboCount = TagMagnitude.Value;
-			Debug::Print(TEXT("UsedCounterAttackComboCount"), UsedCounterAttackComboCount);
+			//Debug::Print(TEXT("UsedCounterAttackComboCount"), UsedCounterAttackComboCount);
 		}
 
 		if (TagMagnitude.Key.MatchesTagExact(CombatGameplayTags::Player_SetByCaller_AttackType_SpecialWeaponAbility))
 		{
 			UsedSpecialWeaponAttackComboCount = TagMagnitude.Value;
-			Debug::Print(TEXT("UsedSpecialWeaponAttackComboCount"), UsedSpecialWeaponAttackComboCount);
+			//Debug::Print(TEXT("UsedSpecialWeaponAttackComboCount"), UsedSpecialWeaponAttackComboCount);
 		}
 	}
 
@@ -151,32 +141,32 @@ void UGEExecCalc_DamageTaken::Execute_Implementation(const FGameplayEffectCustom
 	{
 		const float DamageIncrease = (UsedLightAttackComboCount - 1) * LightAttackComboDamageIncrease + LightAttackDamageScaling;
 		DamageScaling = DamageIncrease;
-		Debug::Print(TEXT("DamageIncreaseLight"), DamageIncrease);
+		//Debug::Print(TEXT("DamageIncreaseLight"), DamageIncrease);
 	}
 
 	if (UsedHeavtAttackComboCount != 0)
 	{
 		const float DamageIncrease = (UsedHeavtAttackComboCount - 1) * HeavyAttackComboDamageIncrease + HeavyAttackDamageScaling;
 		DamageScaling = DamageIncrease;
-		Debug::Print(TEXT("DamageIncreaseHeavy"), DamageIncrease);
+		//Debug::Print(TEXT("DamageIncreaseHeavy"), DamageIncrease);
 	}
 
 	if (UsedCounterAttackComboCount != 0)
 	{
 		const float DamageIncrease = (UsedCounterAttackComboCount - 1) * CounterAttackComboDamageIncrease + CounterAttackDamageScaling;
 		DamageScaling = DamageIncrease;
-		Debug::Print(TEXT("CounterAttackDamageScaling"), DamageScaling);
+		//Debug::Print(TEXT("CounterAttackDamageScaling"), DamageScaling);
 	}
 
 	if (UsedSpecialWeaponAttackComboCount != 0)
 	{
 		const float DamageIncrease = UsedSpecialWeaponAttackComboCount * SpecialAttackComboDamageIncrease + SpecialAttackDamageScaling;
 		DamageScaling = DamageIncrease;
-		Debug::Print(TEXT("DamageIncreaseSpecialWeaponAttack"), DamageIncrease);
+		//Debug::Print(TEXT("DamageIncreaseSpecialWeaponAttack"), DamageIncrease);
 	}
 
 	const float FinalDamageDone = BaseDamage * SourceAttackPower * DamageScaling / TargetDefensePower;
-	Debug::Print(TEXT("FinalDamageDone"), FinalDamageDone);
+	//Debug::Print(TEXT("FinalDamageDone"), FinalDamageDone);
 
 	if (FinalDamageDone > 0.f)
 	{

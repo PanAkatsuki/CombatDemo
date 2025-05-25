@@ -21,7 +21,6 @@ UCombatAttributeSet::UCombatAttributeSet()
 	InitCurrentRage(1.f);
 	InitAttackPower(1.f);
 	InitDefensePower(1.f);
-
 }
 
 void UCombatAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data)
@@ -63,18 +62,15 @@ void UCombatAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCall
 		if (GetCurrentRage() == GetMaxRage())
 		{
 			UCombatFunctionLibrary::AddGameplayTagToActorIfNone(Data.Target.GetAvatarActor(), CombatGameplayTags::Player_Status_Rage_Full);
-
 		}
 		else if (GetCurrentRage() == 0.f)
 		{
 			UCombatFunctionLibrary::AddGameplayTagToActorIfNone(Data.Target.GetAvatarActor(), CombatGameplayTags::Player_Status_Rage_None);
-
 		}
 		else
 		{
 			UCombatFunctionLibrary::RemoveGameplayTagFromActorIfFound(Data.Target.GetAvatarActor(), CombatGameplayTags::Player_Status_Rage_Full);
 			UCombatFunctionLibrary::RemoveGameplayTagFromActorIfFound(Data.Target.GetAvatarActor(), CombatGameplayTags::Player_Status_Rage_None);
-
 		}
 
 		// Check if PawnUIComponent can cast to UHeroUIComponent, only when PawnUIComponent from hero character can success
@@ -107,7 +103,6 @@ void UCombatAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCall
 		if (NewCurrentHealth == 0.f)
 		{
 			UCombatFunctionLibrary::AddGameplayTagToActorIfNone(Data.Target.GetAvatarActor(), CombatGameplayTags::Shared_Status_Death);
-
 		}
 	}
 }
