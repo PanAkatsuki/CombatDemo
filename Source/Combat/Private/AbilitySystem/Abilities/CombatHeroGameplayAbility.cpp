@@ -18,6 +18,8 @@ ACombatHeroCharacter* UCombatHeroGameplayAbility::GetHeroCharacterFromActorInfo(
     {
         CachedCombatHeroCharacter = Cast<ACombatHeroCharacter>(CurrentActorInfo->AvatarActor);
     }
+
+    check(CachedCombatHeroCharacter.IsValid());
     
     return CachedCombatHeroCharacter.IsValid() ? CachedCombatHeroCharacter.Get() : nullptr;
 }

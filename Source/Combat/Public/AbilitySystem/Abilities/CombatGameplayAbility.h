@@ -16,6 +16,7 @@ enum class ECombatAbilityActivationPolicy : uint8
 	OnTriggered,
 	OnGiven
 };
+
 /**
  * 
  */
@@ -31,23 +32,23 @@ protected:
 	//~ End UGameplayAbility Interface
 
 private:
-	// Cached Parameter
-	TWeakObjectPtr<UCombatAbilitySystemComponent> CachedAbilitySystemComponent;
-
-protected:
-	UPROPERTY(EditDefaultsOnly, Category = "CombatAbility")
-	ECombatAbilityActivationPolicy AbilityActivationPolicy = ECombatAbilityActivationPolicy::OnTriggered;
-
-private:
 	void TryActivateOnGivenAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec);
 	void ClearOnGivenAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo);
+
+//private:
+//	// Cached Parameter
+//	TWeakObjectPtr<UCombatAbilitySystemComponent> CachedAbilitySystemComponent;
+
+protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
+	ECombatAbilityActivationPolicy AbilityActivationPolicy = ECombatAbilityActivationPolicy::OnTriggered;
 
 protected:
 	UFUNCTION(BlueprintPure, Category = "Combat|Ability")
 	UPawnFightComponent* GetPawnFightComponentFromActorInfo() const;
 
 	UFUNCTION(BlueprintPure, Category = "Combat|Ability")
-	UCombatAbilitySystemComponent* GetCombatAbilitySystemComponentFromActorInfo();
+	UCombatAbilitySystemComponent* GetCombatAbilitySystemComponentFromActorInfo() const;
 
 	FActiveGameplayEffectHandle NativeApplyEffectSpecHandleToTarget(AActor* TargetActor, const FGameplayEffectSpecHandle& InSpecHandle);
 	

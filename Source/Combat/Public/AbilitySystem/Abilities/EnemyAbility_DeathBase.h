@@ -16,6 +16,9 @@ class COMBAT_API UEnemyAbility_DeathBase : public UCombatEnemyGameplayAbility
 {
 	GENERATED_BODY()
 	
+public:
+	UEnemyAbility_DeathBase();
+
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TMap<int32, UAnimMontage*> MontagesMap;

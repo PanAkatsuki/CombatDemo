@@ -6,10 +6,13 @@
 #include "Characters/CombatBaseCharacter.h"
 #include "CombatEnemyCharacter.generated.h"
 
+//DECLARE_DELEGATE_OneParam(FOnAsyncLoadFinishedDelegate, TSoftObjectPtr<UNiagaraSystem>&);
+
 class UEnemyFightComponent;
 class UEnemyUIComponent;
 class UWidgetComponent;
 class UBoxComponent;
+class UNiagaraSystem;
 
 /**
  * 
@@ -79,9 +82,13 @@ public:
 	//~ End IPawnUIInterface Interface
 
 protected:
-	// Set Niagara System on enemy's material
-	UFUNCTION(BlueprintCallable)
-	void SetNiagaraSystemOnMaterial();
+	//// Set Niagara System on enemy's material when enemy dead
+	//UFUNCTION(BlueprintCallable)
+	//void AsyncLoadDeathAsset(TSoftObjectPtr<UNiagaraSystem>& InDissolveNiagaraSystem);
+
+	//FOnAsyncLoadFinishedDelegate OnAsyncLoadFinishedDelegate;
+
+	//void OnAsyncLoadFinished(TSoftObjectPtr<UNiagaraSystem>& InDissolveNiagaraSystem);
 
 	// Set death effect on enemy's material
 	UFUNCTION(BlueprintCallable)

@@ -12,6 +12,7 @@
 
 UHeroAbility_HitPause::UHeroAbility_HitPause()
 {
+    // Set LatentInfo
     LatentInfo.CallbackTarget = this;
     LatentInfo.ExecutionFunction = FName("OnHitPauseDelayFinished");
     LatentInfo.Linkage = 0;

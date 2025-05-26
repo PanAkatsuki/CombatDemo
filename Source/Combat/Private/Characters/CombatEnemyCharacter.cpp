@@ -53,6 +53,9 @@ ACombatEnemyCharacter::ACombatEnemyCharacter()
 	EnemyHealthWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("EnemyHealthWidgetComponent"));
 	EnemyHealthWidgetComponent->SetupAttachment(this->GetMesh());
 
+	// Bind Delegate
+	//this->OnAsyncLoadFinishedDelegate.BindUObject(this, &ThisClass::OnAsyncLoadFinished);
+
 	// Set LatentInfo
 	DestroyEnemyCharacterLatentInfo.CallbackTarget = this;
 	DestroyEnemyCharacterLatentInfo.ExecutionFunction = FName("OnSpawnStoneEnd");
@@ -173,21 +176,23 @@ UPawnUIComponent* ACombatEnemyCharacter::GetPawnUIComponent() const
 	return EnemyUIComponent;
 }
 
-void ACombatEnemyCharacter::SetNiagaraSystemOnMaterial()
-{
-	/*UAssetManager::GetStreamableManager().RequestAsyncLoad(
-		CharacterStartUpData.ToSoftObjectPath(),
-		FStreamableDelegate::CreateLambda(
-			[this, AbilityApplyLevel]()
-			{
-				if (UDataAsset_StartUpDataBase* LoadedData = CharacterStartUpData.Get())
-				{
-					LoadedData->GiveDataToAbilitySystemComponent(CombatAbilitySystemComponent, AbilityApplyLevel);
-				}
-			}
-		)
-	);*/
-}
+//void ACombatEnemyCharacter::AsyncLoadDeathAsset(TSoftObjectPtr<UNiagaraSystem>& InDissolveNiagaraSystem)
+//{
+//	UAssetManager::GetStreamableManager().RequestAsyncLoad(
+//		InDissolveNiagaraSystem.ToSoftObjectPath(),
+//		FStreamableDelegate::CreateLambda(
+//			[this, &InDissolveNiagaraSystem]()
+//			{
+//				OnAsyncLoadFinished(InDissolveNiagaraSystem);
+//			}
+//		)
+//	);
+//}
+//
+//void ACombatEnemyCharacter::OnAsyncLoadFinished(TSoftObjectPtr<UNiagaraSystem>& InDissolveNiagaraSystem)
+//{
+//
+//}
 
 void ACombatEnemyCharacter::SetScalarParameterValueOnMaterial(float InParameterValue)
 {

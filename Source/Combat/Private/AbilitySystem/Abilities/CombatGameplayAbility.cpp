@@ -48,17 +48,20 @@ void UCombatGameplayAbility::ClearOnGivenAbility(const FGameplayAbilitySpecHandl
 
 UPawnFightComponent* UCombatGameplayAbility::GetPawnFightComponentFromActorInfo() const
 {
-	return GetAvatarActorFromActorInfo()->FindComponentByClass<UPawnFightComponent>();
+	UPawnFightComponent* PawnFightComponent = GetAvatarActorFromActorInfo()->FindComponentByClass<UPawnFightComponent>();
+
+	check(PawnFightComponent);
+
+	return PawnFightComponent;
 }
 
-UCombatAbilitySystemComponent* UCombatGameplayAbility::GetCombatAbilitySystemComponentFromActorInfo()
+UCombatAbilitySystemComponent* UCombatGameplayAbility::GetCombatAbilitySystemComponentFromActorInfo() const
 {
-	if (!CachedAbilitySystemComponent.IsValid())
-	{
-		CachedAbilitySystemComponent = Cast<UCombatAbilitySystemComponent>(CurrentActorInfo->AbilitySystemComponent);
-	}
+	UCombatAbilitySystemComponent* CombatAbilitySystemComponent = Cast<UCombatAbilitySystemComponent>(CurrentActorInfo->AbilitySystemComponent);
 
-	return CachedAbilitySystemComponent.IsValid() ? CachedAbilitySystemComponent.Get() : nullptr;
+	check(CombatAbilitySystemComponent);
+
+	return CombatAbilitySystemComponent;
 }
 
 FActiveGameplayEffectHandle UCombatGameplayAbility::NativeApplyEffectSpecHandleToTarget(AActor* TargetActor, const FGameplayEffectSpecHandle& InSpecHandle)

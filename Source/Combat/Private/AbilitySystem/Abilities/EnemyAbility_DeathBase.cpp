@@ -3,6 +3,13 @@
 
 #include "AbilitySystem/Abilities/EnemyAbility_DeathBase.h"
 
+#include "Characters/CombatEnemyCharacter.h"
+
+
+UEnemyAbility_DeathBase::UEnemyAbility_DeathBase()
+{
+	//Cast<ACombatEnemyCharacter>(GetAvatarActorFromActorInfo())->OnAsyncLoadFinishedDelegate.BindUObject()
+}
 
 UAnimMontage* UEnemyAbility_DeathBase::FindMontageToPlay()
 {

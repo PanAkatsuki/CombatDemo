@@ -27,6 +27,8 @@ public:
 
 protected:
 	//~ Begin APawn Interface.
+	// Load StartUpData
+	// Called when character occupied by controller
 	virtual void PossessedBy(AController* NewController) override;
 	//~ End APawn Interface
 
