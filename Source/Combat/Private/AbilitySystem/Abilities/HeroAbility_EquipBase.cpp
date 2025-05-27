@@ -25,8 +25,8 @@ void UHeroAbility_EquipBase::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	SetPlayMontageTask();
-	SetWaitMontageEventTask();
+	SetPlayMontageTask(MontageToPlay);
+	SetWaitMontageEventTask(TagSet.WaitMontageEventTag);
 }
 
 void UHeroAbility_EquipBase::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
@@ -34,14 +34,14 @@ void UHeroAbility_EquipBase::EndAbility(const FGameplayAbilitySpecHandle Handle,
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
-void UHeroAbility_EquipBase::SetPlayMontageTask()
+void UHeroAbility_EquipBase::SetPlayMontageTask(UAnimMontage* InMontageToPlay)
 {
-	check(MontageToPlay);
+	check(InMontageToPlay);
 
 	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
 		this,
 		FName("PlayEquipMontageTask"),
-		MontageToPlay,
+		InMontageToPlay,
 		1.0f
 	);
 
@@ -51,29 +51,6 @@ void UHeroAbility_EquipBase::SetPlayMontageTask()
 	PlayMontageTask->OnCancelled.AddUniqueDynamic(this, &ThisClass::OnMontageCancelled);
 
 	PlayMontageTask->ReadyForActivation();
-}
-
-void UHeroAbility_EquipBase::SetWaitMontageEventTask()
-{
-	UAbilityTask_WaitGameplayEvent* WaitEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
-		this,
-		WaitMontageEventTag,
-		nullptr,
-		false,
-		true
-	);
-
-	WaitEventTask->EventReceived.AddUniqueDynamic(this, &ThisClass::OnEventReceived);
-
-	WaitEventTask->ReadyForActivation();
-}
-
-void UHeroAbility_EquipBase::AttachWeapon()
-{
-	ACombatHeroWeapon* Weapon = GetHeroFightComponentFromActorInfo()->GetHeroCarriedWeaponByTag(TagWeaponToEquipTag);
-
-	FAttachmentTransformRules AttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::KeepRelative, EAttachmentRule::KeepWorld, true);
-	Weapon->AttachToComponent(GetOwningComponentFromActorInfo(), AttachmentTransformRules, AttachSocketName);
 }
 
 void UHeroAbility_EquipBase::OnMontageCompleted()
@@ -100,9 +77,24 @@ void UHeroAbility_EquipBase::OnMontageCancelled()
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, true);
 }
 
+void UHeroAbility_EquipBase::SetWaitMontageEventTask(FGameplayTag& InWaitMontageEventTag)
+{
+	UAbilityTask_WaitGameplayEvent* WaitEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
+		this,
+		InWaitMontageEventTag,
+		nullptr,
+		false,
+		true
+	);
+
+	WaitEventTask->EventReceived.AddUniqueDynamic(this, &ThisClass::OnEventReceived);
+
+	WaitEventTask->ReadyForActivation();
+}
+
 void UHeroAbility_EquipBase::OnEventReceived(FGameplayEventData InEventData)
 {
-	AttachWeapon();
+	
 	HandleEquippedWeapon();
 }
 
@@ -117,13 +109,25 @@ ACombatHeroWeapon* UHeroAbility_EquipBase::GetCurrentEquippedWeapon()
 
 void UHeroAbility_EquipBase::HandleEquippedWeapon()
 {
-	ACombatHeroWeapon* WeaponAxe = GetHeroFightComponentFromActorInfo()->GetHeroCarriedWeaponByTag(TagWeaponToEquipTag);
-
-	GetHeroFightComponentFromActorInfo()->SetCurrentEquippedWeaponAndTag(TagWeaponToEquipTag, WeaponAxe);
-
+	AttachWeapon(TagSet.WeaponToEquipTag, AttachSocketName);
+	RegisterCurrentEquippedWeapon(TagSet.WeaponToEquipTag);
 	LinkAnimLayer();
 	AddMappingContext();
 	AssignWeaponAbilitySet();
+}
+
+void UHeroAbility_EquipBase::AttachWeapon(FGameplayTag& InWeaponToEquipTag, FName& InAttachSocketName)
+{
+	ACombatHeroWeapon* Weapon = GetHeroFightComponentFromActorInfo()->GetHeroCarriedWeaponByTag(InWeaponToEquipTag);
+
+	FAttachmentTransformRules AttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::KeepRelative, EAttachmentRule::KeepWorld, true);
+	Weapon->AttachToComponent(GetOwningComponentFromActorInfo(), AttachmentTransformRules, InAttachSocketName);
+}
+
+void UHeroAbility_EquipBase::RegisterCurrentEquippedWeapon(FGameplayTag& InWeaponToRegister)
+{
+	ACombatHeroWeapon* WeaponAxe = GetHeroFightComponentFromActorInfo()->GetHeroCarriedWeaponByTag(InWeaponToRegister);
+	GetHeroFightComponentFromActorInfo()->SetCurrentEquippedWeaponAndTag(InWeaponToRegister, WeaponAxe);
 }
 
 void UHeroAbility_EquipBase::LinkAnimLayer()

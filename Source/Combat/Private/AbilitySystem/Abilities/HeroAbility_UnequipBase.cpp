@@ -24,22 +24,22 @@ void UHeroAbility_UnequipBase::ActivateAbility(const FGameplayAbilitySpecHandle 
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	SetPlayMontageTask();
-	SetWaitMontageEventTask();
+	SetPlayMontageTask(MontageToPlay);
+	SetWaitMontageEventTask(WaitMontageEventTag);
 }
 void UHeroAbility_UnequipBase::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
-void UHeroAbility_UnequipBase::SetPlayMontageTask()
+void UHeroAbility_UnequipBase::SetPlayMontageTask(UAnimMontage* InMontageToPlay)
 {
-	check(MontageToPlay);
+	check(InMontageToPlay);
 
 	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
 		this,
 		FName("PlayUnequipMontageTask"),
-		MontageToPlay,
+		InMontageToPlay,
 		1.0f
 	);
 
@@ -49,29 +49,6 @@ void UHeroAbility_UnequipBase::SetPlayMontageTask()
 	PlayMontageTask->OnCancelled.AddUniqueDynamic(this, &ThisClass::OnMontageCancelled);
 
 	PlayMontageTask->ReadyForActivation();
-}
-
-void UHeroAbility_UnequipBase::SetWaitMontageEventTask()
-{
-	UAbilityTask_WaitGameplayEvent* WaitEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
-		this,
-		WaitMontageEventTag,
-		nullptr,
-		false,
-		true
-	);
-
-	WaitEventTask->EventReceived.AddUniqueDynamic(this, &ThisClass::OnEventReceived);
-
-	WaitEventTask->ReadyForActivation();
-}
-
-void UHeroAbility_UnequipBase::AttachWeapon()
-{
-	ACombatHeroWeapon* Weapon = GetHeroFightComponentFromActorInfo()->GetHeroCurrentEquippedWeapon();
-
-	FAttachmentTransformRules AttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::KeepRelative, EAttachmentRule::KeepWorld, true);
-	Weapon->AttachToComponent(GetOwningComponentFromActorInfo(), AttachmentTransformRules, AttachSocketName);
 }
 
 void UHeroAbility_UnequipBase::OnMontageCompleted()
@@ -98,20 +75,41 @@ void UHeroAbility_UnequipBase::OnMontageCancelled()
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, true);
 }
 
+void UHeroAbility_UnequipBase::SetWaitMontageEventTask(FGameplayTag& InWaitMontageEventTag)
+{
+	UAbilityTask_WaitGameplayEvent* WaitEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
+		this,
+		InWaitMontageEventTag,
+		nullptr,
+		false,
+		true
+	);
+
+	WaitEventTask->EventReceived.AddUniqueDynamic(this, &ThisClass::OnEventReceived);
+
+	WaitEventTask->ReadyForActivation();
+}
+
 void UHeroAbility_UnequipBase::OnEventReceived(FGameplayEventData InEventData)
 {
-	AttachWeapon();
 	HandleUnequippedWeapon();
 }
 
 void UHeroAbility_UnequipBase::HandleUnequippedWeapon()
 {
+	AttachWeapon(AttachSocketName);
 	UnlinkAnimLayer();
 	RemoveMappingContext();
 	RemoveWeaponAbilitySet();
+	DeleteRegisterInfo();// Should put at last line in UHeroAbility_UnequipBase::HandleUnequippedWeapon()
+}
 
-	// Should put at last line in UHeroAbility_UnequipBase::HandleUnequippedWeapon()
-	GetHeroFightComponentFromActorInfo()->SetCurrentEquippedWeaponAndTag(FGameplayTag(), nullptr);
+void UHeroAbility_UnequipBase::AttachWeapon(FName& InAttachSocketName)
+{
+	ACombatHeroWeapon* Weapon = GetHeroFightComponentFromActorInfo()->GetHeroCurrentEquippedWeapon();
+
+	FAttachmentTransformRules AttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::KeepRelative, EAttachmentRule::KeepWorld, true);
+	Weapon->AttachToComponent(GetOwningComponentFromActorInfo(), AttachmentTransformRules, InAttachSocketName);
 }
 
 ACombatHeroWeapon* UHeroAbility_UnequipBase::GetCurrentEquippedWeapon()
@@ -157,4 +155,9 @@ void UHeroAbility_UnequipBase::RemoveWeaponAbilitySet()
 	GetCombatAbilitySystemComponentFromActorInfo()->RemoveGrantHeroWeaponAbilities(
 		AbilitySpecHandles
 	);
+}
+
+void UHeroAbility_UnequipBase::DeleteRegisterInfo()
+{
+	GetHeroFightComponentFromActorInfo()->SetCurrentEquippedWeaponAndTag(FGameplayTag(), nullptr);
 }

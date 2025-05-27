@@ -35,11 +35,8 @@ protected:
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 	//~ End UgameplayAbility Interface ~//
 
-	void SetPlayMontageTask();
-	void SetWaitMontageEventTask();
-	void AttachWeapon();
+	void SetPlayMontageTask(UAnimMontage* InMontageToPlay);
 	
-protected:
 	UFUNCTION()
 	void OnMontageCompleted();
 
@@ -52,13 +49,16 @@ protected:
 	UFUNCTION()
 	void OnMontageCancelled();
 
+	void SetWaitMontageEventTask(FGameplayTag& InWaitMontageEventTag);
+
 	UFUNCTION()
 	void OnEventReceived(FGameplayEventData InEventData);
 
-protected:
 	ACombatHeroWeapon* GetCurrentEquippedWeapon();
 	void HandleUnequippedWeapon();
+	void AttachWeapon(FName& InAttachSocketName);
 	void UnlinkAnimLayer();
 	void RemoveMappingContext();
 	void RemoveWeaponAbilitySet();
+	void DeleteRegisterInfo();
 };

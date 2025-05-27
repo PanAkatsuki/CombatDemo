@@ -36,5 +36,8 @@ protected:
 	FGameplayTag WeaponTagToRigister;
 
 	UPROPERTY(EditDefaultsOnly)
-	bool RegisterAsEquippedWeapon;
+	bool bRegisterAsEquippedWeapon;
+
+protected:
+	void SpawnWeaponAndAttachToSocket(TSubclassOf<ACombatWeaponBase>& InWeaponToSpawn, FName& InSocketNameToAttachTo, FGameplayTag& InWeaponTagToRigister, bool InbRegisterAsEquippedWeapon);
 };

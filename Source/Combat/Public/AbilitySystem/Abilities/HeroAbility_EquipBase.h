@@ -8,6 +8,19 @@
 
 class ACombatHeroWeapon;
 
+USTRUCT(BlueprintType)
+struct FEquipTagSet
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag WeaponToEquipTag;
+
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag WaitMontageEventTag;
+};
+
 /**
  * 
  */
@@ -24,25 +37,19 @@ protected:
 	UAnimMontage* MontageToPlay;
 
 	UPROPERTY(EditDefaultsOnly)
+	FEquipTagSet TagSet;
+
+	UPROPERTY(EditDefaultsOnly)
 	FName AttachSocketName;
-
-	UPROPERTY(EditDefaultsOnly)
-	FGameplayTag TagWeaponToEquipTag;
-
-	UPROPERTY(EditDefaultsOnly)
-	FGameplayTag WaitMontageEventTag;
-
+	
 protected:
 	//~ Begin UGameplayAbility Interface ~//
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 	//~ End UgameplayAbility Interface ~//
 
-	void SetPlayMontageTask();
-	void SetWaitMontageEventTask();
-	void AttachWeapon();
+	void SetPlayMontageTask(UAnimMontage* InMontageToPlay);
 
-protected:
 	UFUNCTION()
 	void OnMontageCompleted();
 
@@ -55,12 +62,15 @@ protected:
 	UFUNCTION()
 	void OnMontageCancelled();
 
+	void SetWaitMontageEventTask(FGameplayTag& InWaitMontageEventTag);
+
 	UFUNCTION()
 	void OnEventReceived(FGameplayEventData InEventData);
 
-protected:
 	ACombatHeroWeapon* GetCurrentEquippedWeapon();
 	void HandleEquippedWeapon();
+	void AttachWeapon(FGameplayTag& InWeaponToEquipTag, FName& InAttachSocketName);
+	void RegisterCurrentEquippedWeapon(FGameplayTag& InWeaponToRegister);
 	void LinkAnimLayer();
 	void AddMappingContext();
 	void AssignWeaponAbilitySet();
