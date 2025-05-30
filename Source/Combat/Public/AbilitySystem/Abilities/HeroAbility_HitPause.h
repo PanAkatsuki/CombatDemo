@@ -1,4 +1,4 @@
-// Zhang All Rights Reserved.
+﻿// Zhang All Rights Reserved.
 
 #pragma once
 
@@ -31,10 +31,17 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float DelayDuration = 0.02f;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UCameraShakeBase> CameraShakeClass;
+
 	FLatentActionInfo LatentInfo;
 
 protected:
+	//~ Begin UGameplayAbility Interface ~//
+	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
+	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
+	//~ End UgameplayAbility Interface ~//
+
 	UFUNCTION(BlueprintCallable)
 	void ActivateHitPauseAbility();
 

@@ -6,12 +6,20 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Controllers/CombatHeroController.h"
+#include "CombatGameplayTags.h"
 
 #include "CombatDebugHelper.h"
 
 
 UHeroAbility_HitPause::UHeroAbility_HitPause()
 {
+    InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
+
+    FAbilityTriggerData AbilityTriggerData = FAbilityTriggerData();
+    AbilityTriggerData.TriggerTag = CombatGameplayTags::Player_Event_HitPause;
+    AbilityTriggerData.TriggerSource = EGameplayAbilityTriggerSource::GameplayEvent;
+    AbilityTriggers.Add(AbilityTriggerData);
+
     // Set LatentInfo
     LatentInfo.CallbackTarget = this;
     LatentInfo.ExecutionFunction = FName("OnHitPauseDelayFinished");
@@ -21,14 +29,33 @@ UHeroAbility_HitPause::UHeroAbility_HitPause()
 
 void UHeroAbility_HitPause::OnHitPauseDelayFinished()
 {
-    //Debug::Print(TEXT("Enter"));
     UWorld* World = GEngine->GetWorldFromContextObject(this, EGetWorldErrorMode::LogAndReturnNull);
 
-    if (World)
+    if (!World)
     {
-        //Debug::Print(TEXT("ResetDelay"));
-        UGameplayStatics::SetGlobalTimeDilation(World, OriginalWorldDilation);
+        UE_LOG(LogTemp, Warning, TEXT("World is null in ActivateHitPauseAbility!"));
+
+        return;
     }
+
+    UGameplayStatics::SetGlobalTimeDilation(World, OriginalWorldDilation);
+
+    GetHeroControllerFromActorInfo()->ClientStartCameraShake(CameraShakeClass);
+
+    EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
+}
+
+void UHeroAbility_HitPause::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
+{
+    Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+
+    ActivateHitPauseAbility();
+}
+
+void UHeroAbility_HitPause::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
+{
+    Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+
 }
 
 void UHeroAbility_HitPause::ActivateHitPauseAbility()
@@ -40,6 +67,7 @@ void UHeroAbility_HitPause::ActivateHitPauseAbility()
     if (!World)
     {
         UE_LOG(LogTemp, Warning, TEXT("World is null in ActivateHitPauseAbility!"));
+
         return;
     }
 
