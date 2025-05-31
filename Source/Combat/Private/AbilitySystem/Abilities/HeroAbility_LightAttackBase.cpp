@@ -61,7 +61,7 @@ void UHeroAbility_LightAttackBase::InitializeComboCount(int32& InCurrentAttackCo
 
 void UHeroAbility_LightAttackBase::SetPlayMontageTask(TMap<int32, UAnimMontage*>& InMontagesMap, int32& InKey)
 {
-	check(AttackMontagesMap.Num());
+	check(InMontagesMap.Num());
 
 	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
 		this,

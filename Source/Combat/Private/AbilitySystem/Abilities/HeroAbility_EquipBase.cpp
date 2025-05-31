@@ -13,6 +13,7 @@
 #include "AbilitySystem/CombatAbilitySystemComponent.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
+#include "Components/UI/HeroUIComponent.h"
 
 #include "CombatDebugHelper.h"
 
@@ -114,6 +115,7 @@ void UHeroAbility_EquipBase::HandleEquippedWeapon()
 	LinkAnimLayer();
 	AddMappingContext();
 	AssignWeaponAbilitySet();
+	UpdateUISystem();
 }
 
 void UHeroAbility_EquipBase::AttachWeapon(FGameplayTag& InWeaponToEquipTag, FName& InAttachSocketName)
@@ -171,4 +173,10 @@ void UHeroAbility_EquipBase::AssignWeaponAbilitySet()
 	);
 
 	GetCurrentEquippedWeapon()->AssignGrantedAbilitySpecHandles(AbilitySpecHandle);
+}
+
+void UHeroAbility_EquipBase::UpdateUISystem()
+{
+	ACombatHeroWeapon* HeroWeapon = GetHeroCharacterFromActorInfo()->GetHeroFightComponent()->GetHeroCurrentEquippedWeapon();
+	GetHeroCharacterFromActorInfo()->GetHeroUIComponent()->OnEquippedWeaponChanged.Broadcast(HeroWeapon->HeroWeaponData.SoftWeaponIconTexture);
 }

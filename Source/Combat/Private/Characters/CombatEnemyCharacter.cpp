@@ -17,6 +17,11 @@
 #include "CombatGameplayTags.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Items/Weapons/CombatWeaponBase.h"
+#include "Components/CapsuleComponent.h"
+#include "NiagaraSystem.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
+#include "Components/TimelineComponent.h"
 
 #include "CombatDebugHelper.h"
 
@@ -53,14 +58,14 @@ ACombatEnemyCharacter::ACombatEnemyCharacter()
 	EnemyHealthWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("EnemyHealthWidgetComponent"));
 	EnemyHealthWidgetComponent->SetupAttachment(this->GetMesh());
 
-	// Bind Delegate
-	//this->OnAsyncLoadFinishedDelegate.BindUObject(this, &ThisClass::OnAsyncLoadFinished);
+	// Init Timeline
+	DissolveTimelineAttributeSet.DissolveTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("DissolveTimeline"));
 
 	// Set LatentInfo
-	DestroyEnemyCharacterLatentInfo.CallbackTarget = this;
-	DestroyEnemyCharacterLatentInfo.ExecutionFunction = FName("OnSpawnStoneEnd");
-	DestroyEnemyCharacterLatentInfo.Linkage = 0;
-	DestroyEnemyCharacterLatentInfo.UUID = 2;
+	DestroyEnemyAttributeSet.DestroyEnemyCharacterLatentInfo.CallbackTarget = this;
+	DestroyEnemyAttributeSet.DestroyEnemyCharacterLatentInfo.ExecutionFunction = FName("OnSpawnStoneEnd");
+	DestroyEnemyAttributeSet.DestroyEnemyCharacterLatentInfo.Linkage = 0;
+	DestroyEnemyAttributeSet.DestroyEnemyCharacterLatentInfo.UUID = 2;
 }
 
 void ACombatEnemyCharacter::PossessedBy(AController* NewController)
@@ -74,6 +79,19 @@ void ACombatEnemyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// Set Timeline with DissolveCurve
+	if (DissolveTimelineAttributeSet.DissolveTimeline && DissolveTimelineAttributeSet.DissolveCurve)
+	{
+		FOnTimelineFloat TimelineProgress;
+		TimelineProgress.BindUFunction(this, FName("OnDissolveTimelineUpdate"));
+		DissolveTimelineAttributeSet.DissolveTimeline->AddInterpFloat(DissolveTimelineAttributeSet.DissolveCurve, TimelineProgress);
+
+		FOnTimelineEvent TimelineFinished;
+		TimelineFinished.BindUFunction(this, FName("OnDissolveTimelineFinished"));
+		DissolveTimelineAttributeSet.DissolveTimeline->SetTimelineFinishedFunc(TimelineFinished);
+	}
+
+	// Init Widget
 	if (UCombatWidgetBase* HealthWidget = Cast<UCombatWidgetBase>(EnemyHealthWidgetComponent->GetUserWidgetObject()))
 	{
 		HealthWidget->InitEnemyCreateWidget(this);
@@ -114,6 +132,25 @@ void ACombatEnemyCharacter::OnBodyCollisionBoxBeginOverlap(UPrimitiveComponent* 
 			EnemyFightComponent->OnHitTargetActor(OtherActor);
 		}
 	}
+}
+
+UPawnFightComponent* ACombatEnemyCharacter::GetPawnFightComponent() const
+{
+	return EnemyFightComponent;
+}
+
+void ACombatEnemyCharacter::OnEnemyDied(TSoftObjectPtr<UNiagaraSystem>& InDissolveNiagaraSystem)
+{
+	GetMesh()->bPauseAnims = true;
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	EnemyUIComponent->RemoveEnemyDrawnWidgetsIfAny();
+	//Debug::Print(TEXT("EnemyDied!"));
+	AsyncLoadNiagaraSystem(InDissolveNiagaraSystem);
+}
+
+UPawnUIComponent* ACombatEnemyCharacter::GetPawnUIComponent() const
+{
+	return EnemyUIComponent;
 }
 
 void ACombatEnemyCharacter::InitEnemyStartUpData()
@@ -166,33 +203,64 @@ void ACombatEnemyCharacter::InitEnemyStartUpData()
 	);
 }
 
-UPawnFightComponent* ACombatEnemyCharacter::GetPawnFightComponent() const
+void ACombatEnemyCharacter::AsyncLoadNiagaraSystem(TSoftObjectPtr<UNiagaraSystem>& InDissolveNiagaraSystem)
 {
-	return EnemyFightComponent;
+	if (InDissolveNiagaraSystem.IsNull())
+	{
+		Debug::Print(TEXT("In AsyncLoadNiagaraSystem, InDissolveNiagaraSystem is null"));
+		return;
+	}
+
+	DissolveNiagaraSystem = InDissolveNiagaraSystem;
+
+	UAssetManager::GetStreamableManager().RequestAsyncLoad(
+		InDissolveNiagaraSystem.ToSoftObjectPath(),
+		FStreamableDelegate::CreateUObject(this, &ACombatEnemyCharacter::OnAsyncLoadNiagaraSystemFinished)
+	);
 }
 
-UPawnUIComponent* ACombatEnemyCharacter::GetPawnUIComponent() const
+void ACombatEnemyCharacter::OnAsyncLoadNiagaraSystemFinished()
 {
-	return EnemyUIComponent;
+	if (UNiagaraSystem* LoadedSystem = DissolveNiagaraSystem.Get())
+	{
+		UNiagaraComponent* NiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
+			LoadedSystem,
+			GetMesh(),
+			FName(),
+			FVector(),
+			FRotator(),
+			EAttachLocation::KeepRelativeOffset,
+			true
+		);
+
+		UMaterialInstanceDynamic* MaterialInstanceDynamic = GetMesh()->CreateDynamicMaterialInstance(0, GetMesh()->GetMaterial(0));
+		FHashedMaterialParameterInfo HashedMaterialParameterInfo = FHashedMaterialParameterInfo(FName("DissolveEdgeColor"));
+		FLinearColor LinearColor;
+		MaterialInstanceDynamic->GetVectorParameterValue(HashedMaterialParameterInfo, LinearColor);
+
+		NiagaraComponent->SetVariableLinearColor(FName("DissolveParticleColor"), LinearColor);
+
+		// Start Timeline
+		DissolveTimelineAttributeSet.DissolveTimeline->SetPlayRate(1 / DissolveTimelineAttributeSet.DissolveTime);
+		DissolveTimelineAttributeSet.DissolveTimeline->PlayFromStart();
+	}
+	else
+	{
+		Debug::Print(TEXT("In OnAsyncLoadNiagaraSystemFinished, NiagaraSystem load failed!"));
+	}
 }
 
-//void ACombatEnemyCharacter::AsyncLoadDeathAsset(TSoftObjectPtr<UNiagaraSystem>& InDissolveNiagaraSystem)
-//{
-//	UAssetManager::GetStreamableManager().RequestAsyncLoad(
-//		InDissolveNiagaraSystem.ToSoftObjectPath(),
-//		FStreamableDelegate::CreateLambda(
-//			[this, &InDissolveNiagaraSystem]()
-//			{
-//				OnAsyncLoadFinished(InDissolveNiagaraSystem);
-//			}
-//		)
-//	);
-//}
-//
-//void ACombatEnemyCharacter::OnAsyncLoadFinished(TSoftObjectPtr<UNiagaraSystem>& InDissolveNiagaraSystem)
-//{
-//
-//}
+void ACombatEnemyCharacter::OnDissolveTimelineUpdate(float InValue)
+{
+	//Debug::Print(TEXT("OnDissolveTimelineUpdate"));
+	SetScalarParameterValueOnMaterial(InValue);
+}
+
+void ACombatEnemyCharacter::OnDissolveTimelineFinished()
+{
+	//Debug::Print(TEXT("OnDissolveTimelineFinished"));
+	DestroyEnemyCharacter();
+}
 
 void ACombatEnemyCharacter::SetScalarParameterValueOnMaterial(float InParameterValue)
 {
@@ -219,7 +287,7 @@ void ACombatEnemyCharacter::DestroyEnemyCharacter()
 
 	check(World);
 
-	UKismetSystemLibrary::Delay(World, DestroyEnemyCharacterDelayDuration, DestroyEnemyCharacterLatentInfo);
+	UKismetSystemLibrary::Delay(World, DestroyEnemyAttributeSet.DestroyEnemyCharacterDelayDuration, DestroyEnemyAttributeSet.DestroyEnemyCharacterLatentInfo);
 }
 
 void ACombatEnemyCharacter::OnSpawnStoneEnd()

@@ -60,5 +60,6 @@ protected:
 	void UnlinkAnimLayer();
 	void RemoveMappingContext();
 	void RemoveWeaponAbilitySet();
+	void UpdateUISystem();
 	void DeleteRegisterInfo();
 };

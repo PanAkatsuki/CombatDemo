@@ -3,3 +3,6 @@
 
 #include "Components/UI/HeroUIComponent.h"
 
+UHeroUIComponent::UHeroUIComponent()
+{
+}

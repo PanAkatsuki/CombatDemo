@@ -6,11 +6,16 @@
 #include "Characters/CombatEnemyCharacter.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "AbilitySystem/CombatAbilitySystemComponent.h"
+#include "CombatGameplayTags.h"
 
 
 UEnemyAbility_DeathBase::UEnemyAbility_DeathBase()
 {
-	//Cast<ACombatEnemyCharacter>(GetAvatarActorFromActorInfo())->OnAsyncLoadFinishedDelegate.BindUObject()
+	// Set AbilityTriggerData
+	FAbilityTriggerData AbilityTriggerData = FAbilityTriggerData();
+	AbilityTriggerData.TriggerTag = CombatGameplayTags::Shared_Status_Death;
+	AbilityTriggerData.TriggerSource = EGameplayAbilityTriggerSource::GameplayEvent;
+	AbilityTriggers.Add(AbilityTriggerData);
 }
 
 void UEnemyAbility_DeathBase::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
@@ -25,6 +30,7 @@ void UEnemyAbility_DeathBase::EndAbility(const FGameplayAbilitySpecHandle Handle
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 
+	GetEnemyCharacterFromActorInfo()->OnEnemyDied(DissolveNiagaraSystem);
 }
 
 void UEnemyAbility_DeathBase::SetPlayMontageTask(TMap<int32, UAnimMontage*>& InMontagesMap)

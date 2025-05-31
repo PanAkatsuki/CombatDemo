@@ -74,5 +74,5 @@ protected:
 	void LinkAnimLayer();
 	void AddMappingContext();
 	void AssignWeaponAbilitySet();
-	
+	void UpdateUISystem();
 };

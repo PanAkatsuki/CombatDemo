@@ -1,24 +1,56 @@
-// Zhang All Rights Reserved.
+﻿// Zhang All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "Characters/CombatBaseCharacter.h"
+
+#include "Interfaces/EnemyDeathInterface.h"
+
 #include "CombatEnemyCharacter.generated.h"
 
-//DECLARE_DELEGATE_OneParam(FOnAsyncLoadFinishedDelegate, TSoftObjectPtr<UNiagaraSystem>&);
 
 class UEnemyFightComponent;
 class UEnemyUIComponent;
 class UWidgetComponent;
 class UBoxComponent;
 class UNiagaraSystem;
+class UTimelineComponent;
+
+USTRUCT(BlueprintType)
+struct FDissolveTimelineAttributeSet
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY()
+	UTimelineComponent* DissolveTimeline;
+
+	UPROPERTY(EditDefaultsOnly)
+	float DissolveTime = 4.0f;
+
+	UPROPERTY(EditDefaultsOnly)
+	UCurveFloat* DissolveCurve;
+};
+
+USTRUCT(BlueprintType)
+struct FDestroyEnemyAttributeSet
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY()
+	FLatentActionInfo DestroyEnemyCharacterLatentInfo;
+
+	UPROPERTY(EditDefaultsOnly)
+	float DestroyEnemyCharacterDelayDuration = 0.5f;
+};
 
 /**
  * 
  */
 UCLASS()
-class COMBAT_API ACombatEnemyCharacter : public ACombatBaseCharacter, public IPawnFightInterface
+class COMBAT_API ACombatEnemyCharacter : public ACombatBaseCharacter, public IEnemyDeathInterface, public IPawnFightInterface
 {
 	GENERATED_BODY()
 
@@ -35,11 +67,13 @@ protected:
 
 #if WITH_EDITOR
 	//~ Begin UObject Interface.
+	// For Boss Enemy
 	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
 	//~ End UObject Interface
 #endif
 	
 public:
+	// For Boss Enemy
 	UFUNCTION()
 	virtual void OnBodyCollisionBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
@@ -65,8 +99,15 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "UI")
 	UWidgetComponent* EnemyHealthWidgetComponent;
 
+	UPROPERTY(EditDefaultsOnly)
+	FDissolveTimelineAttributeSet DissolveTimelineAttributeSet;
+
+	UPROPERTY(EditDefaultsOnly)
+	FDestroyEnemyAttributeSet DestroyEnemyAttributeSet;
+
 private:
-	void InitEnemyStartUpData();
+	// Use this to get niagara system after async load
+	TSoftObjectPtr<UNiagaraSystem> DissolveNiagaraSystem;
 
 public:
 	FORCEINLINE UEnemyFightComponent* GetEnemyFightComponent() const { return EnemyFightComponent; }
@@ -77,36 +118,35 @@ public:
 	virtual UPawnFightComponent* GetPawnFightComponent() const override;
 	//~ End IPawnFightInterface Interface
 
+	//~ Begin IEnemyDeathInterface Interface.
+	virtual void OnEnemyDied(TSoftObjectPtr<UNiagaraSystem>& InDissolveNiagaraSystem) override;
+	//~ End IEnemyDeathInterface Interface
+	// 
 	//~ Begin IPawnUIInterface Interface.
 	virtual UPawnUIComponent* GetPawnUIComponent() const override;
 	//~ End IPawnUIInterface Interface
 
 protected:
-	//// Set Niagara System on enemy's material when enemy dead
-	//UFUNCTION(BlueprintCallable)
-	//void AsyncLoadDeathAsset(TSoftObjectPtr<UNiagaraSystem>& InDissolveNiagaraSystem);
+	void InitEnemyStartUpData();
 
-	//FOnAsyncLoadFinishedDelegate OnAsyncLoadFinishedDelegate;
+	// Set Niagara System on enemy's material when enemy dead
+	void AsyncLoadNiagaraSystem(TSoftObjectPtr<UNiagaraSystem>& InDissolveNiagaraSystem);
+	void OnAsyncLoadNiagaraSystemFinished();
 
-	//void OnAsyncLoadFinished(TSoftObjectPtr<UNiagaraSystem>& InDissolveNiagaraSystem);
+	// Timeline
+	UFUNCTION()
+	void OnDissolveTimelineUpdate(float InValue);
+
+	UFUNCTION()
+	void OnDissolveTimelineFinished();
 
 	// Set death effect on enemy's material
-	UFUNCTION(BlueprintCallable)
 	void SetScalarParameterValueOnMaterial(float InParameterValue);
 
-	//~ For Destroy Character
 	// Set DestroyEnemyCharacterDelayDuration to make sure stone spawned before destroy Character
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	FLatentActionInfo DestroyEnemyCharacterLatentInfo;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	float DestroyEnemyCharacterDelayDuration = 0.5f;
-
-	UFUNCTION(BlueprintCallable)
 	void DestroyEnemyCharacter();
 
 	UFUNCTION()
 	void OnSpawnStoneEnd();
-	//~ For Destroy Character
 
 };

@@ -15,6 +15,7 @@ UHeroAbility_HitPause::UHeroAbility_HitPause()
 {
     InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 
+    // Set AbilityTriggerData
     FAbilityTriggerData AbilityTriggerData = FAbilityTriggerData();
     AbilityTriggerData.TriggerTag = CombatGameplayTags::Player_Event_HitPause;
     AbilityTriggerData.TriggerSource = EGameplayAbilityTriggerSource::GameplayEvent;

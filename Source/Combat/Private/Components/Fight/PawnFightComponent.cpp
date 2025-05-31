@@ -54,7 +54,7 @@ void UPawnFightComponent::ToggleBodyAttackCollision(bool bShouldEnable, EToggleD
 
 void UPawnFightComponent::RegisterSpawnedWeapon(FGameplayTag InWeaponTagToRegister, ACombatWeaponBase* InWeaponToRegister, bool bRegisterAsEquippedWeapon)
 {
-	checkf(!CharacterCarriedWeaponMap.Contains(InWeaponTagToRegister), TEXT("InWeaponTagToRegister has been registered!"), *InWeaponTagToRegister.ToString());
+	checkf(!CharacterCarriedWeaponMap.Contains(InWeaponTagToRegister), TEXT("%s has been registered!"), *InWeaponTagToRegister.ToString());
 	checkf(InWeaponToRegister, TEXT("InWeaponToRegister is a nullptr"));
 
 	// Add Weapon to Carried Weapon Map

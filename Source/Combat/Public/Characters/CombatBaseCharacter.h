@@ -60,10 +60,6 @@ public:
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	//~ End IAbilitySystemInterface Interface
 
-	//~ Begin IPawnFightInterface Interface.
-	//virtual UPawnFightComponent* GetPawnFightComponent() const override;
-	//~ End IPawnFightInterface Interface
-
 	//~ Begin IPawnUIInterface Interface.
 	virtual UPawnUIComponent* GetPawnUIComponent() const override;
 	//~ End IPawnUIInterface Interface

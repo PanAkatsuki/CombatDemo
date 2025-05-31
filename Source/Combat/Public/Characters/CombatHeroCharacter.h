@@ -90,6 +90,7 @@ protected:
 
 public:
 	FORCEINLINE UHeroFightComponent* GetHeroFightComponent() const { return HeroFightComponent; }
+	FORCEINLINE UHeroUIComponent* GetHeroUIComponent() const { return HeroUIComponent; }
 
 	//~ Begin IPawnFightInterface Interface.
 	virtual UPawnFightComponent* GetPawnFightComponent() const override;

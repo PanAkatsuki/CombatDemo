@@ -26,6 +26,6 @@ private:
 public:
 	//~ Begin IGenericTeamAgentInterface Interface.
 	virtual FGenericTeamId GetGenericTeamId() const override;
-	//~ End IPawnFightInterface Interface
+	//~ End IGenericTeamAgentInterface Interface
 
 };

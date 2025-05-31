@@ -11,6 +11,7 @@
 #include "AbilitySystem/CombatAbilitySystemComponent.h"
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
+#include "Components/UI/HeroUIComponent.h"
 
 #include "CombatDebugHelper.h"
 
@@ -101,6 +102,7 @@ void UHeroAbility_UnequipBase::HandleUnequippedWeapon()
 	UnlinkAnimLayer();
 	RemoveMappingContext();
 	RemoveWeaponAbilitySet();
+	UpdateUISystem();
 	DeleteRegisterInfo();// Should put at last line in UHeroAbility_UnequipBase::HandleUnequippedWeapon()
 }
 
@@ -155,6 +157,12 @@ void UHeroAbility_UnequipBase::RemoveWeaponAbilitySet()
 	GetCombatAbilitySystemComponentFromActorInfo()->RemoveGrantHeroWeaponAbilities(
 		AbilitySpecHandles
 	);
+}
+
+void UHeroAbility_UnequipBase::UpdateUISystem()
+{
+	ACombatHeroWeapon* HeroWeapon = GetHeroCharacterFromActorInfo()->GetHeroFightComponent()->GetHeroCurrentEquippedWeapon();
+	GetHeroCharacterFromActorInfo()->GetHeroUIComponent()->OnEquippedWeaponChanged.Broadcast(TSoftObjectPtr<UTexture2D>());
 }
 
 void UHeroAbility_UnequipBase::DeleteRegisterInfo()

@@ -21,6 +21,10 @@ public:
 	ACombatAIController(const FObjectInitializer& ObjectInitializer);
 
 protected:
+	//~ Begin AController Interface.
+	virtual void OnPossess(APawn* InPawn) override;
+	//~ End AController Interface
+
 	virtual void BeginPlay() override;
 
 	UFUNCTION()
@@ -31,6 +35,10 @@ public:
 	// Called by AIPerceptionComponent Automatically when AIPerceptionComponent detected other actors
 	virtual ETeamAttitude::Type GetTeamAttitudeTowards(const AActor& Other) const override;
 	//~ End IGenericTeamAgentInterface Interface
+
+protected:
+	UPROPERTY(EditDefaultsOnly)
+	UBehaviorTree* BehaviorTree = nullptr;
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Detour Crowd Avoidance Config")

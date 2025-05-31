@@ -7,13 +7,15 @@
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
 #include "BehaviorTree/BlackboardComponent.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 #include "CombatDebugHelper.h"
 
 ACombatAIController::ACombatAIController(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer.SetDefaultSubobjectClass<UCrowdFollowingComponent>(TEXT("PathFollowingComponent")))
 {
-	AISenseConfig_Sight = CreateDefaultSubobject<UAISenseConfig_Sight>("EnemySenseConfig_Sight");
+	AISenseConfig_Sight = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("EnemySenseConfig_Sight"));
 	AISenseConfig_Sight->DetectionByAffiliation.bDetectEnemies = true;
 	AISenseConfig_Sight->DetectionByAffiliation.bDetectFriendlies = false;
 	AISenseConfig_Sight->DetectionByAffiliation.bDetectNeutrals = false;
@@ -28,6 +30,28 @@ ACombatAIController::ACombatAIController(const FObjectInitializer& ObjectInitial
 
 	SetGenericTeamId(FGenericTeamId(1));
 
+}
+
+void ACombatAIController::OnPossess(APawn* InPawn)
+{
+	Super::OnPossess(InPawn);
+
+	if (!BehaviorTree)
+	{
+		Debug::Print(TEXT("In OnPossess, BehaviorTree is null!"));
+		return;
+	}
+
+	RunBehaviorTree(BehaviorTree);
+
+	if (ACharacter* SensedCharacter = Cast<ACharacter>(InPawn))
+	{
+		GetBlackboardComponent()->SetValueAsFloat(
+			FName("DefaultMaxWalkSpeed"), 
+			SensedCharacter->GetCharacterMovement()->MaxWalkSpeed
+		);
+		//Debug::Print(TEXT("SetValueAsFloat"));
+	}
 }
 
 void ACombatAIController::BeginPlay()
@@ -64,8 +88,15 @@ void ACombatAIController::BeginPlay()
 
 void ACombatAIController::OnEnemyPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
 {
+	if (!Stimulus.WasSuccessfullySensed() || !Actor)
+	{
+		return;
+	}
+
 	// Try set BlackboardComponent's "TargetActor" members as Actor
 	UBlackboardComponent* BlackboardComponent = GetBlackboardComponent();
+
+	check(BlackboardComponent);
 
 	if (BlackboardComponent->GetValueAsObject(FName("TargetActor")) == Cast<UObject>(Actor))
 	{

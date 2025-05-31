@@ -30,6 +30,5 @@ void UCombatWidgetBase::InitEnemyCreateWidget(AActor* OwningEnemyActor)
 		checkf(EnemyUIComponent, TEXT("Failed to extract an EnemyUIComponent from %s"), *OwningEnemyActor->GetActorNameOrLabel());
 
 		BP_OnOwningEnemyUIComponentInitialized(EnemyUIComponent);
-
 	}
 }

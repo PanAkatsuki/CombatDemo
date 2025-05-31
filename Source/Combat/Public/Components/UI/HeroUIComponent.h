@@ -27,6 +27,9 @@ class COMBAT_API UHeroUIComponent : public UPawnUIComponent
 	GENERATED_BODY()
 	
 public:
+	UHeroUIComponent();
+
+public:
 	UPROPERTY(BlueprintAssignable)
 	FOnPercentChangedDelegate OnCurrentRageChanged;
 
@@ -41,4 +44,7 @@ public:
 
 	UPROPERTY(BlueprintCallable, BlueprintAssignable)
 	FOnStoneInteractedDelegate OnStoneInteracted;
+
+public:
+	//void 
 };
