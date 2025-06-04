@@ -7,13 +7,11 @@
 #include "AIController.h"
 #include "Kismet/KismetMathLibrary.h"
 
+#include "CombatDebugHelper.h"
+
 
 UBTTask_RotateToFaceTarget::UBTTask_RotateToFaceTarget()
 {
-	NodeName = TEXT("Native Rotate to Face Target Actor");
-	AnglePrecision = 10.f;
-	RotationInterpspeed = 5.f;
-
 	bNotifyTick = true;
 	bNotifyTaskFinished = true;
 	bCreateNodeInstance = false;
@@ -50,12 +48,18 @@ EBTNodeResult::Type UBTTask_RotateToFaceTarget::ExecuteTask(UBehaviorTreeCompone
 	//Super::ExecuteTask(OwnerComp, NodeMemory);// Should NOT Call Super::ExecuteTask(OwnerComp, NodeMemory), cus in this Function, there is a return function
 
 	UObject* ActorObject = OwnerComp.GetBlackboardComponent()->GetValueAsObject(InTargetToFaceKey.SelectedKeyName);
+	if (!ActorObject)
+	{
+		//Debug::Print(TEXT("!ActorObject"));
+		return EBTNodeResult::Failed;
+	}
+
 	AActor* TargetActor = Cast<AActor>(ActorObject);
+	check(TargetActor);
 
 	APawn* OwningPawn = OwnerComp.GetAIOwner()->GetPawn();
 
 	FRotateToFaceTargetTaskMemory* Memory = CastInstanceNodeMemory<FRotateToFaceTargetTaskMemory>(NodeMemory);
-
 	check(Memory);
 
 	Memory->OwningPawn = OwningPawn;
@@ -77,12 +81,13 @@ EBTNodeResult::Type UBTTask_RotateToFaceTarget::ExecuteTask(UBehaviorTreeCompone
 
 void UBTTask_RotateToFaceTarget::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
-	//Super::TickTask(OwnerComp, NodeMemory, DeltaSeconds); // Super::TickTask function is empty
+	Super::TickTask(OwnerComp, NodeMemory, DeltaSeconds); // Super::TickTask function is empty
 
 	FRotateToFaceTargetTaskMemory* Memory = CastInstanceNodeMemory<FRotateToFaceTargetTaskMemory>(NodeMemory);
 
 	if (!Memory->IsValid())
 	{
+		Debug::Print(TEXT("In UBTTask_RotateToFaceTarget::TickTask, Memory is not valid!"));
 		FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
 	}
 
@@ -102,7 +107,6 @@ void UBTTask_RotateToFaceTarget::TickTask(UBehaviorTreeComponent& OwnerComp, uin
 		{
 			const FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(OwningPawn->GetActorLocation(), TargetActor->GetActorLocation());
 			const FRotator TargetRotation = FMath::RInterpTo(OwningPawn->GetActorRotation(), LookAtRotation, DeltaSeconds, RotationInterpspeed);
-
 			OwningPawn->SetActorRotation(TargetRotation);
 		}
 	}

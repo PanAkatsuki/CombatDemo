@@ -4,7 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Components/PawnExtensionComponentBase.h"
+
 #include "GameplayTagContainer.h"
+
 #include "PawnFightComponent.generated.h"
 
 class ACombatWeaponBase;
@@ -27,7 +29,7 @@ class COMBAT_API UPawnFightComponent : public UPawnExtensionComponentBase
 	GENERATED_BODY()
 	
 public:
-	// Function Bind To Delegater
+	// Function Bind To Delegate
 	virtual void OnHitTargetActor(AActor* HitActor);
 	virtual void OnWeaponPulledFromTargetActor(AActor* InteractedActor);
 

@@ -4,27 +4,30 @@
 
 #include "CoreMinimal.h"
 #include "BehaviorTree/BTService.h"
-#include "BTService_OrientToTargetActor.generated.h"
+#include "BTService_UpdateMotionWarp.generated.h"
+
+
+class ACombatEnemyCharacter;
 
 /**
  * 
  */
 UCLASS()
-class COMBAT_API UBTService_OrientToTargetActor : public UBTService
+class COMBAT_API UBTService_UpdateMotionWarp : public UBTService
 {
 	GENERATED_BODY()
 	
 public:
-	UBTService_OrientToTargetActor();
+	UBTService_UpdateMotionWarp();
 
-public:
+protected:
 	UPROPERTY(EditAnywhere)
 	FBlackboardKeySelector InTargetActorKey;
 
-	UPROPERTY(EditAnywhere)
-	float RotaionInterpSpeed = 5.f;
+private:
+	TWeakObjectPtr<ACombatEnemyCharacter> OwningEnemyCharacter;
 
-public:
+protected:
 	//~ Begin UBTNode Interface.
 	virtual void InitializeFromAsset(UBehaviorTree& Asset) override;
 	virtual FString GetStaticDescription() const override;
@@ -33,5 +36,4 @@ public:
 	//~ Begin UBTService Interface.
 	virtual void TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
 	//~ End UBTService Interface
-
 };

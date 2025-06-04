@@ -34,6 +34,7 @@ protected:
 	UBoxComponent* WeaponCollisionBox;
 
 public:
+	// Delegate
 	FOnTargetInteractedDelegate OnWeaponHitTarget;
 	FOnTargetInteractedDelegate OnWeaponPulledFromTarget;
 

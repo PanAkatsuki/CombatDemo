@@ -129,7 +129,6 @@ bool UCombatAbilitySystemComponent::TryAcitivateAbilityByTag(FGameplayTag Abilit
 	check(AbilityTagToActivate.IsValid());
 
 	TArray<FGameplayAbilitySpec*> AbilitySpec;
-
 	GetActivatableGameplayAbilitySpecsByAllMatchingTags(AbilityTagToActivate.GetSingleTagContainer(), AbilitySpec);
 
 	if (!AbilitySpec.IsEmpty())

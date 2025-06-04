@@ -7,19 +7,17 @@
 #include "AIController.h"
 #include "Kismet/KismetMathLibrary.h"
 
+#include "CombatDebugHelper.h"
+
+
 UBTService_OrientToTargetActor::UBTService_OrientToTargetActor()
 {
-	NodeName = TEXT("Native Orient Rotation To Target Actor");
-
 	INIT_SERVICE_NODE_NOTIFY_FLAGS();
 
 	Interval = 0.f;
 	RandomDeviation = 0.f;
 
 	InTargetActorKey.AddObjectFilter(this, GET_MEMBER_NAME_CHECKED(ThisClass, InTargetActorKey), AActor::StaticClass());
-
-	RotaionInterpSpeed = 5.f;
-
 }
 
 void UBTService_OrientToTargetActor::InitializeFromAsset(UBehaviorTree& Asset)
@@ -28,13 +26,19 @@ void UBTService_OrientToTargetActor::InitializeFromAsset(UBehaviorTree& Asset)
 
 	if (UBlackboardData* BlackboardData = GetBlackboardAsset())
 	{
-
 		InTargetActorKey.ResolveSelectedKey(*BlackboardData);
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Blackboard asset is null in UBTService_OrientToTargetActor"));
+		UE_LOG(LogTemp, Warning, TEXT("In UBTService_OrientToTargetActor::InitializeFromAsset, BlackboardData is null!"));
 	}
+}
+
+FString UBTService_OrientToTargetActor::GetStaticDescription() const
+{
+	const FString KeyDescription = InTargetActorKey.SelectedKeyName.ToString();
+
+	return FString::Printf(TEXT("Orient rotation to %s key %s"), *KeyDescription, *GetStaticServiceDescription());
 }
 
 void UBTService_OrientToTargetActor::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
@@ -53,11 +57,4 @@ void UBTService_OrientToTargetActor::TickNode(UBehaviorTreeComponent& OwnerComp,
 
 		OwningPawn->SetActorRotation(TargetRotation);
 	}
-}
-
-FString UBTService_OrientToTargetActor::GetStaticDescription() const
-{
-	const FString KeyDescription = InTargetActorKey.SelectedKeyName.ToString();
-
-	return FString::Printf(TEXT("Orient rotation to %s key %s"), *KeyDescription, *GetStaticServiceDescription());
 }

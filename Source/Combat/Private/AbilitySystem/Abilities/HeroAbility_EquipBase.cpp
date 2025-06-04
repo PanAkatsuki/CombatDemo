@@ -95,7 +95,6 @@ void UHeroAbility_EquipBase::SetWaitMontageEventTask(FGameplayTag& InWaitMontage
 
 void UHeroAbility_EquipBase::OnEventReceived(FGameplayEventData InEventData)
 {
-	
 	HandleEquippedWeapon();
 }
 

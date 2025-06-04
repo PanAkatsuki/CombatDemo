@@ -36,10 +36,10 @@ public:
 	
 private:
 	UPROPERTY(EditAnywhere, Category = "Face Target")
-	float AnglePrecision;
+	float AnglePrecision = 10.f;
 
 	UPROPERTY(EditAnywhere, Category = "Face Target")
-	float RotationInterpspeed;
+	float RotationInterpspeed = 5.f;
 
 	UPROPERTY(EditAnywhere, Category = "Face Target")
 	FBlackboardKeySelector InTargetToFaceKey;
@@ -51,9 +51,11 @@ private:
 	virtual FString GetStaticDescription() const override;
 	//~ End UBTNode Interface
 
-	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
+	//~ Begin UBTTaskNode Interface
 	// If EBTNodeResult::Type ExecuteTask function return EBTNodeResult::InProgress, than system will call TickTask function
+	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 	virtual void TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
+	//~ End UBTTaskNode Interface
 
 	bool HasReachedAnglePercision(APawn* QueryPawn, AActor* TargetActor) const;
 };

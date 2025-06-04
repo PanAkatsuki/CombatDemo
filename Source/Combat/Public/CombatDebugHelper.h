@@ -7,7 +7,6 @@ namespace Debug
 		if (GEngine)
 		{
 			GEngine->AddOnScreenDebugMessage(InKey, 10.f, Color, Msg);
-
 			UE_LOG(LogTemp, Warning, TEXT("%s"), *Msg);
 		}
 	}
@@ -17,11 +16,8 @@ namespace Debug
 		if (GEngine)
 		{
 			const FString FinalMsg = FloatTitle + TEXT(": ") + FString::SanitizeFloat(FloatValueToPrint);
-
 			GEngine->AddOnScreenDebugMessage(InKey, 10.f, Color, FinalMsg);
-
 			UE_LOG(LogTemp, Warning, TEXT("%s"), *FinalMsg);
-
 		}
 	}
 }

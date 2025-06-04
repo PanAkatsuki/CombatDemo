@@ -8,6 +8,8 @@
 #include "AbilitySystem/CombatAbilitySystemComponent.h"
 #include "CombatGameplayTags.h"
 
+#include "CombatDebugHelper.h"
+
 
 UEnemyAbility_DeathBase::UEnemyAbility_DeathBase()
 {

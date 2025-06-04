@@ -7,6 +7,9 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "KismetAnimationLibrary.h"
 
+#include "CombatDebugHelper.h"
+
+
 void UCombatCharacterAnimInstance::NativeInitializeAnimation()
 {
 	Super::NativeInitializeAnimation();
@@ -17,6 +20,10 @@ void UCombatCharacterAnimInstance::NativeInitializeAnimation()
 	{
 		OwningMovementComponent = OwningCharacter->GetCharacterMovement();
 	}
+	else
+	{
+		Debug::Print(TEXT("In UCombatCharacterAnimInstance::NativeInitializeAnimation, OwningCharacter cast failed!"));
+	}
 }
 
 void UCombatCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSeconds)
@@ -25,6 +32,7 @@ void UCombatCharacterAnimInstance::NativeThreadSafeUpdateAnimation(float DeltaSe
 
 	if (!OwningCharacter || !OwningMovementComponent)
 	{
+		Debug::Print(TEXT("In UCombatCharacterAnimInstance::NativeThreadSafeUpdateAnimation, OwningCharacter or OwningMovementComponent is null!"));
 		return;
 	}
 
