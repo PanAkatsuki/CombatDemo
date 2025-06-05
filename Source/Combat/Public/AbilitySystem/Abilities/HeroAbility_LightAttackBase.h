@@ -80,7 +80,7 @@ protected:
 	void InitializeTimer(FTimerHandle& InTimerHandle);
 	void InitializeComboCount(int32& InCurrentAttackComboCount, int32& InUsedAttackComboCount);
 
-	// Begin Montage
+	// Set Montage Task
 	void SetPlayMontageTask(TMap<int32, UAnimMontage*>& InMontagesMap, int32& InKey);
 	UAnimMontage* FindMontageToPlay(TMap<int32, UAnimMontage*>& InMontagesMap, int32& InKey);
 
@@ -98,7 +98,6 @@ protected:
 
 	void SetTimer(FTimerHandle& InTimerHandle, FTimerDelegate& InTimerDelegate);
 	void OnAbilityEndTimerFinished();
-	// End Montage
 	
 	void SetWaitMontageEventTask(FGameplayTag& InEventTag);
 

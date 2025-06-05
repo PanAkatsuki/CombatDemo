@@ -87,7 +87,7 @@ void UEnemyAbility_HitReact::SetPlayMontageTask(TMap<int32, UAnimMontage*>& InMo
 
 	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
 		this,
-		FName("PlayLightAttackMontageTask"),
+		FName("PlayEnemyHitReactMontageTask"),
 		FindMontageToPlay(InMontagesMap),
 		1.0f
 	);

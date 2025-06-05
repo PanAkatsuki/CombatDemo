@@ -17,48 +17,63 @@ class COMBAT_API UHeroGameplayAbility_TargetLock : public UCombatHeroGameplayAbi
 {
 	GENERATED_BODY()
 	
+public:
+	UHeroGameplayAbility_TargetLock();
+
 private:
-	UPROPERTY(EditDefaultsOnly, Category = "Target Lock")
+	UPROPERTY(EditDefaultsOnly)
 	float BoxTraceDistance = 5000.f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Target Lock")
+	UPROPERTY(EditDefaultsOnly)
 	FVector TraceBoxSize = FVector(5000.f, 5000.f, 300.f);
 
-	UPROPERTY(EditDefaultsOnly, Category = "Target Lock")
+	UPROPERTY(EditDefaultsOnly)
 	TArray<TEnumAsByte<EObjectTypeQuery>> BoxTraceChannel;
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Target Lock")
+	UPROPERTY(EditDefaultsOnly)
 	bool bShowPersistentDebugShape = false;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Target Lock")
+	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UCombatWidgetBase> TargetLockWidgetClass;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Target Lock")
+	UPROPERTY(EditDefaultsOnly)
 	float TargetLockRotationInterpSpeed = 5.f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Target Lock")
+	UPROPERTY(EditDefaultsOnly)
 	float TargetLockMaxWalkSpeed = 150.f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Target Lock")
-	UInputMappingContext* TargetLockMappingContext;
+	UPROPERTY(EditDefaultsOnly)
+	UInputMappingContext* TargetLockMappingContext = nullptr;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Target Lock")
+	UPROPERTY(EditDefaultsOnly)
 	float TargetLockCameraOffsetDistance = 20.f;
 
 	UPROPERTY()
 	TArray<AActor*> AvailableActorsToLock;
 
 	UPROPERTY()
-	AActor* CurrentLockedActor;
+	AActor* CurrentLockedActor = nullptr;
 
 	UPROPERTY()
-	UCombatWidgetBase* TargetLockWidget;
+	UCombatWidgetBase* TargetLockWidget = nullptr;
 
 	UPROPERTY()
 	FVector2D TargetLockWidgetSize = FVector2D::ZeroVector;
 
 	UPROPERTY()
 	float CachedDefaultMaxWalkSpeed = 0.f;
+
+protected:
+	//~ Begin UGameplayAbility Interface ~//
+	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
+	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
+	//~ End UgameplayAbility Interface ~//
+
+	UFUNCTION(BlueprintCallable)
+	void OnTargetLockTick(float DeltaTime);
+
+	UFUNCTION(BlueprintCallable)
+	void SwitchTarget(const FGameplayTag& InSwitchDirectionTag);
 
 private:
 	void TryLockOnTarget();
@@ -75,15 +90,4 @@ private:
 	void ClearAvailableActorsToLock();
 	void ResetTargetLockMovement();
 	void ResetTargetLockMappingContext();
-protected:
-	//~ Begin UGameplayAbility Interface ~//
-	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
-	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
-	//~ End UgameplayAbility Interface ~//
-
-	UFUNCTION(BlueprintCallable)
-	void OnTargetLockTick(float DeltaTime);
-
-	UFUNCTION(BlueprintCallable)
-	void SwitchTarget(const FGameplayTag& InSwitchDirectionTag);
 };

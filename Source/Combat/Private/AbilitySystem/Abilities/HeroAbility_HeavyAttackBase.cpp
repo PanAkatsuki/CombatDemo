@@ -60,7 +60,7 @@ void UHeroAbility_HeavyAttackBase::SetPlayMontageTask(TMap<int32, UAnimMontage*>
 
 	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
 		this,
-		FName("PlayLightAttackMontageTask"),
+		FName("PlayHeavyAttackMontageTask"),
 		FindMontageToPlay(InMontagesMap, InKey),
 		1.0f
 	);

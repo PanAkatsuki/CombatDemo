@@ -41,7 +41,7 @@ void UEnemyAbility_DeathBase::SetPlayMontageTask(TMap<int32, UAnimMontage*>& InM
 
 	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
 		this,
-		FName("PlayLightAttackMontageTask"),
+		FName("PlayEnemyDeathMontageTask"),
 		FindMontageToPlay(InMontagesMap),
 		1.0f
 	);

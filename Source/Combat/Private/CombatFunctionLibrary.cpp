@@ -110,7 +110,7 @@ float UCombatFunctionLibrary::GetScalableFloatValueAtLevel(const FScalableFloat&
 	return InScalableFloat.GetValueAtLevel(InLevel);
 }
 
-FGameplayTag UCombatFunctionLibrary::ComputeHitReactDirectionTag(AActor* InAttacker, AActor* InVictim, float& OutAngleDifference)
+FGameplayTag UCombatFunctionLibrary::ComputeHitReactDirectionTag(const AActor* InAttacker, const AActor* InVictim, float& OutAngleDifference)
 {
 	check(InAttacker);
 	check(InVictim);

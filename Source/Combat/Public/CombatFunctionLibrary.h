@@ -51,7 +51,7 @@ public:
 	static float GetScalableFloatValueAtLevel(const FScalableFloat& InScalableFloat, float InLevel = 1.f);
 
 	UFUNCTION(BlueprintPure, Category = "Combat|FunctionLibrary")
-	static FGameplayTag ComputeHitReactDirectionTag(AActor* InAttacker, AActor* InVictim, float& OutAngleDifference);
+	static FGameplayTag ComputeHitReactDirectionTag(const AActor* InAttacker, const AActor* InVictim, float& OutAngleDifference);
 
 	UFUNCTION(BlueprintPure, Category = "Combat|FunctionLibrary")
 	static bool IsValidBlock(AActor* InAttacker, AActor* InDefender);

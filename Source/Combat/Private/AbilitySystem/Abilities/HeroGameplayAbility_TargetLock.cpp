@@ -20,6 +20,102 @@
 #include "CombatDebugHelper.h"
 
 
+UHeroGameplayAbility_TargetLock::UHeroGameplayAbility_TargetLock()
+{
+}
+
+void UHeroGameplayAbility_TargetLock::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
+{
+	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+
+	TryLockOnTarget();
+	InitTargetLockMovement();
+	InitTargetLockMappingContext();
+}
+
+void UHeroGameplayAbility_TargetLock::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
+{
+	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+
+	CleanUp();
+	ClearAvailableActorsToLock();
+	ResetTargetLockMovement();
+	ResetTargetLockMappingContext();
+}
+
+void UHeroGameplayAbility_TargetLock::OnTargetLockTick(float DeltaTime)
+{
+	if (!CurrentLockedActor)
+	{
+		CancelTargetLockAbility();
+		return;
+	}
+
+	if (UCombatFunctionLibrary::NativeDoesActorHaveTag(CurrentLockedActor, CombatGameplayTags::Shared_Status_Death))
+	{
+		CancelTargetLockAbility();
+		return;
+	}
+
+	if (UCombatFunctionLibrary::NativeDoesActorHaveTag(GetHeroCharacterFromActorInfo(), CombatGameplayTags::Shared_Status_Death))
+	{
+		CancelTargetLockAbility();
+		return;
+	}
+
+	SetTargetLockWidgetPosition();
+
+	if (
+		!UCombatFunctionLibrary::NativeDoesActorHaveTag(GetHeroCharacterFromActorInfo(), CombatGameplayTags::Player_Status_Rolling) &&
+		!UCombatFunctionLibrary::NativeDoesActorHaveTag(GetHeroCharacterFromActorInfo(), CombatGameplayTags::Player_Status_Blocking)
+		)
+	{
+		check(CurrentLockedActor);
+		FRotator LookAtRot = UKismetMathLibrary::FindLookAtRotation(
+			GetHeroCharacterFromActorInfo()->GetActorLocation(),
+			CurrentLockedActor->GetActorLocation()
+		);
+
+		LookAtRot -= FRotator(TargetLockCameraOffsetDistance, 0.f, 0.f);
+
+		const FRotator CurrentControlRot = GetHeroControllerFromActorInfo()->GetControlRotation();
+		const FRotator TargetRot = FMath::RInterpTo(CurrentControlRot, LookAtRot, DeltaTime, TargetLockRotationInterpSpeed);
+
+		GetHeroControllerFromActorInfo()->SetControlRotation(TargetRot);
+		GetHeroCharacterFromActorInfo()->SetActorRotation(FRotator(0.f, TargetRot.Yaw, 0.f));
+	}
+
+}
+
+void UHeroGameplayAbility_TargetLock::SwitchTarget(const FGameplayTag& InSwitchDirectionTag)
+{
+	GetAvailableActorsToLock();
+
+	TArray<AActor*> ActorsOnLeft;
+	TArray<AActor*> ActorsOnRight;
+	AActor* NewTargetToLock = nullptr;
+
+	GetAvailableActorsAroundTarget(ActorsOnLeft, ActorsOnRight);
+
+	if (InSwitchDirectionTag == CombatGameplayTags::Player_Event_SwithchTarget_Left)
+	{
+		NewTargetToLock = GetNearestTargetFromAvailableActors(ActorsOnLeft);
+
+	}
+	else if (InSwitchDirectionTag == CombatGameplayTags::Player_Event_SwithchTarget_Right)
+	{
+		NewTargetToLock = GetNearestTargetFromAvailableActors(ActorsOnRight);
+
+	}
+
+	if (NewTargetToLock)
+	{
+		CurrentLockedActor = NewTargetToLock;
+
+	}
+}
+
+
 void UHeroGameplayAbility_TargetLock::TryLockOnTarget()
 {
 	GetAvailableActorsToLock();
@@ -35,7 +131,6 @@ void UHeroGameplayAbility_TargetLock::TryLockOnTarget()
 	if (CurrentLockedActor)
 	{
 		DrawTargetLockWidget();
-
 		SetTargetLockWidgetPosition();
 	}
 	else
@@ -120,17 +215,18 @@ void UHeroGameplayAbility_TargetLock::GetAvailableActorsAroundTarget(TArray<AAct
 
 void UHeroGameplayAbility_TargetLock::DrawTargetLockWidget()
 {
-	if (!TargetLockWidget)
+	if (TargetLockWidget)
 	{
-		checkf(TargetLockWidgetClass, TEXT("Should assign a valid widget class in blueprint"));
-
-		// Create
-		TargetLockWidget = CreateWidget<UCombatWidgetBase>(GetHeroControllerFromActorInfo(), TargetLockWidgetClass);
-
-		check(TargetLockWidget);
-
-		TargetLockWidget->AddToViewport();
+		return;
 	}
+	
+	checkf(TargetLockWidgetClass, TEXT("Should assign a valid widget class in blueprint!"));
+
+	// Create
+	TargetLockWidget = CreateWidget<UCombatWidgetBase>(GetHeroControllerFromActorInfo(), TargetLockWidgetClass);
+	check(TargetLockWidget);
+
+	TargetLockWidget->AddToViewport();
 }
 
 void UHeroGameplayAbility_TargetLock::SetTargetLockWidgetPosition()
@@ -189,8 +285,7 @@ void UHeroGameplayAbility_TargetLock::InitTargetLockMappingContext()
 
 void UHeroGameplayAbility_TargetLock::CancelTargetLockAbility()
 {
-	CancelAbility(GetCurrentAbilitySpecHandle(), GetCurrentActorInfo(), GetCurrentActivationInfo(), true);
-
+	CancelAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true);
 	CleanUp();
 }
 
@@ -203,9 +298,8 @@ void UHeroGameplayAbility_TargetLock::CleanUp()
 	if (TargetLockWidget)
 	{
 		TargetLockWidget->RemoveFromParent();
+		TargetLockWidget = nullptr;
 	}
-
-	TargetLockWidget = nullptr;
 
 	TargetLockWidgetSize = FVector2D::ZeroVector;
 }
@@ -233,90 +327,7 @@ void UHeroGameplayAbility_TargetLock::ResetTargetLockMappingContext()
 
 	const ULocalPlayer* LocalPlayer = GetHeroControllerFromActorInfo()->GetLocalPlayer();
 	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer);
-
 	check(Subsystem);
-
 	Subsystem->RemoveMappingContext(TargetLockMappingContext);
 }
 
-void UHeroGameplayAbility_TargetLock::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
-{
-	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
-
-	TryLockOnTarget();
-	InitTargetLockMovement();
-	InitTargetLockMappingContext();
-}
-
-void UHeroGameplayAbility_TargetLock::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
-{
-	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
-
-	CleanUp();
-	ClearAvailableActorsToLock();
-	ResetTargetLockMovement();
-	ResetTargetLockMappingContext();
-}
-
-void UHeroGameplayAbility_TargetLock::OnTargetLockTick(float DeltaTime)
-{
-	if (!CurrentLockedActor || 
-		UCombatFunctionLibrary::NativeDoesActorHaveTag(CurrentLockedActor, CombatGameplayTags::Shared_Status_Death) ||
-		UCombatFunctionLibrary::NativeDoesActorHaveTag(GetHeroCharacterFromActorInfo(), CombatGameplayTags::Shared_Status_Death)
-		)
-	{
-		CancelTargetLockAbility();
-		return;
-	}
-
-	SetTargetLockWidgetPosition();
-
-	if (
-		!UCombatFunctionLibrary::NativeDoesActorHaveTag(GetHeroCharacterFromActorInfo(), CombatGameplayTags::Player_Status_Rolling) &&
-		!UCombatFunctionLibrary::NativeDoesActorHaveTag(GetHeroCharacterFromActorInfo(), CombatGameplayTags::Player_Status_Blocking)
-		)
-	{
-		check(CurrentLockedActor);
-		FRotator LookAtRot = UKismetMathLibrary::FindLookAtRotation(
-			GetHeroCharacterFromActorInfo()->GetActorLocation(),
-			CurrentLockedActor->GetActorLocation()
-		);
-
-		LookAtRot -= FRotator(TargetLockCameraOffsetDistance, 0.f, 0.f);
-
-		const FRotator CurrentControlRot = GetHeroControllerFromActorInfo()->GetControlRotation();
-		const FRotator TargetRot = FMath::RInterpTo(CurrentControlRot, LookAtRot, DeltaTime, TargetLockRotationInterpSpeed);
-
-		GetHeroControllerFromActorInfo()->SetControlRotation(TargetRot);
-		GetHeroCharacterFromActorInfo()->SetActorRotation(FRotator(0.f, TargetRot.Yaw, 0.f));
-	}
-
-}
-
-void UHeroGameplayAbility_TargetLock::SwitchTarget(const FGameplayTag& InSwitchDirectionTag)
-{
-	GetAvailableActorsToLock();
-
-	TArray<AActor*> ActorsOnLeft;
-	TArray<AActor*> ActorsOnRight;
-	AActor* NewTargetToLock = nullptr;
-
-	GetAvailableActorsAroundTarget(ActorsOnLeft, ActorsOnRight);
-
-	if (InSwitchDirectionTag == CombatGameplayTags::Player_Event_SwithchTarget_Left)
-	{
-		NewTargetToLock = GetNearestTargetFromAvailableActors(ActorsOnLeft);
-
-	}
-	else if (InSwitchDirectionTag == CombatGameplayTags::Player_Event_SwithchTarget_Right)
-	{
-		NewTargetToLock = GetNearestTargetFromAvailableActors(ActorsOnRight);
-
-	}
-
-	if (NewTargetToLock)
-	{
-		CurrentLockedActor = NewTargetToLock;
-
-	}
-}

@@ -57,7 +57,7 @@ void UEnemyAbility_MeleeAttackBase::SetPlayMontageTask(UAnimMontage* InMontageTo
 
 	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
 		this,
-		FName("PlayEquipMontageTask"),
+		FName("PlayEnemyMeleeAttackMontageTask"),
 		InMontageToPlay,
 		1.0f
 	);

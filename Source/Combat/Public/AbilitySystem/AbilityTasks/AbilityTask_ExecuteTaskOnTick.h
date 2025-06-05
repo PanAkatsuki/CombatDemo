@@ -15,6 +15,7 @@ UCLASS()
 class COMBAT_API UAbilityTask_ExecuteTaskOnTick : public UAbilityTask
 {
 	GENERATED_BODY()
+
 public:
 	UAbilityTask_ExecuteTaskOnTick();
 
