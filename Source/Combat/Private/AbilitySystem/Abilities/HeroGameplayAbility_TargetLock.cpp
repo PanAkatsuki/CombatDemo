@@ -16,6 +16,8 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "AbilitySystem/AbilityTasks/AbilityTask_ExecuteTaskOnTick.h"
+#include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 
 #include "CombatDebugHelper.h"
 
@@ -31,6 +33,9 @@ void UHeroGameplayAbility_TargetLock::ActivateAbility(const FGameplayAbilitySpec
 	TryLockOnTarget();
 	InitTargetLockMovement();
 	InitTargetLockMappingContext();
+
+	SetTickTask();
+	SetWaitMontageEventTask(WaitMontageEventTag);
 }
 
 void UHeroGameplayAbility_TargetLock::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
@@ -43,21 +48,23 @@ void UHeroGameplayAbility_TargetLock::EndAbility(const FGameplayAbilitySpecHandl
 	ResetTargetLockMappingContext();
 }
 
+void UHeroGameplayAbility_TargetLock::SetTickTask()
+{
+	UAbilityTask_ExecuteTaskOnTick* TickTask = UAbilityTask_ExecuteTaskOnTick::ExecuteTasksOnTick(this);
+	check(TickTask);
+
+	TickTask->OnAbilityTaskTick.AddDynamic(this, &ThisClass::OnTargetLockTick);
+
+	TickTask->ReadyForActivation();
+}
+
 void UHeroGameplayAbility_TargetLock::OnTargetLockTick(float DeltaTime)
 {
-	if (!CurrentLockedActor)
-	{
-		CancelTargetLockAbility();
-		return;
-	}
-
-	if (UCombatFunctionLibrary::NativeDoesActorHaveTag(CurrentLockedActor, CombatGameplayTags::Shared_Status_Death))
-	{
-		CancelTargetLockAbility();
-		return;
-	}
-
-	if (UCombatFunctionLibrary::NativeDoesActorHaveTag(GetHeroCharacterFromActorInfo(), CombatGameplayTags::Shared_Status_Death))
+	const bool bShouldCancelAbility =
+		!CurrentLockedActor ||
+		UCombatFunctionLibrary::NativeDoesActorHaveTag(CurrentLockedActor, CombatGameplayTags::Shared_Status_Death) ||
+		UCombatFunctionLibrary::NativeDoesActorHaveTag(GetHeroCharacterFromActorInfo(), CombatGameplayTags::Shared_Status_Death);
+	if (bShouldCancelAbility)
 	{
 		CancelTargetLockAbility();
 		return;
@@ -65,10 +72,10 @@ void UHeroGameplayAbility_TargetLock::OnTargetLockTick(float DeltaTime)
 
 	SetTargetLockWidgetPosition();
 
-	if (
+	const bool bShouldOverrideRotation =
 		!UCombatFunctionLibrary::NativeDoesActorHaveTag(GetHeroCharacterFromActorInfo(), CombatGameplayTags::Player_Status_Rolling) &&
-		!UCombatFunctionLibrary::NativeDoesActorHaveTag(GetHeroCharacterFromActorInfo(), CombatGameplayTags::Player_Status_Blocking)
-		)
+		!UCombatFunctionLibrary::NativeDoesActorHaveTag(GetHeroCharacterFromActorInfo(), CombatGameplayTags::Player_Status_Blocking);
+	if (bShouldOverrideRotation)
 	{
 		check(CurrentLockedActor);
 		FRotator LookAtRot = UKismetMathLibrary::FindLookAtRotation(
@@ -84,37 +91,27 @@ void UHeroGameplayAbility_TargetLock::OnTargetLockTick(float DeltaTime)
 		GetHeroControllerFromActorInfo()->SetControlRotation(TargetRot);
 		GetHeroCharacterFromActorInfo()->SetActorRotation(FRotator(0.f, TargetRot.Yaw, 0.f));
 	}
-
 }
 
-void UHeroGameplayAbility_TargetLock::SwitchTarget(const FGameplayTag& InSwitchDirectionTag)
+void UHeroGameplayAbility_TargetLock::SetWaitMontageEventTask(FGameplayTag& InEventTag)
 {
-	GetAvailableActorsToLock();
+	UAbilityTask_WaitGameplayEvent* WaitEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
+		this,
+		InEventTag,
+		nullptr,
+		false,
+		false
+	);
 
-	TArray<AActor*> ActorsOnLeft;
-	TArray<AActor*> ActorsOnRight;
-	AActor* NewTargetToLock = nullptr;
+	WaitEventTask->EventReceived.AddUniqueDynamic(this, &ThisClass::OnEventReceived);
 
-	GetAvailableActorsAroundTarget(ActorsOnLeft, ActorsOnRight);
-
-	if (InSwitchDirectionTag == CombatGameplayTags::Player_Event_SwithchTarget_Left)
-	{
-		NewTargetToLock = GetNearestTargetFromAvailableActors(ActorsOnLeft);
-
-	}
-	else if (InSwitchDirectionTag == CombatGameplayTags::Player_Event_SwithchTarget_Right)
-	{
-		NewTargetToLock = GetNearestTargetFromAvailableActors(ActorsOnRight);
-
-	}
-
-	if (NewTargetToLock)
-	{
-		CurrentLockedActor = NewTargetToLock;
-
-	}
+	WaitEventTask->ReadyForActivation();
 }
 
+void UHeroGameplayAbility_TargetLock::OnEventReceived(FGameplayEventData InEventData)
+{
+	SwitchTarget(InEventData.EventTag);
+}
 
 void UHeroGameplayAbility_TargetLock::TryLockOnTarget()
 {
@@ -136,6 +133,30 @@ void UHeroGameplayAbility_TargetLock::TryLockOnTarget()
 	else
 	{
 		CancelTargetLockAbility();
+	}
+}
+
+void UHeroGameplayAbility_TargetLock::SwitchTarget(const FGameplayTag& InSwitchDirectionTag)
+{
+	GetAvailableActorsToLock();
+
+	TArray<AActor*> ActorsOnLeft;
+	TArray<AActor*> ActorsOnRight;
+	GetAvailableActorsAroundTarget(ActorsOnLeft, ActorsOnRight);
+
+	AActor* NewTargetToLock = nullptr;
+	if (InSwitchDirectionTag == CombatGameplayTags::Player_Event_SwithchTarget_Left)
+	{
+		NewTargetToLock = GetNearestTargetFromAvailableActors(ActorsOnLeft);
+	}
+	else if (InSwitchDirectionTag == CombatGameplayTags::Player_Event_SwithchTarget_Right)
+	{
+		NewTargetToLock = GetNearestTargetFromAvailableActors(ActorsOnRight);
+	}
+
+	if (NewTargetToLock)
+	{
+		CurrentLockedActor = NewTargetToLock;
 	}
 }
 
@@ -199,7 +220,6 @@ void UHeroGameplayAbility_TargetLock::GetAvailableActorsAroundTarget(TArray<AAct
 		}
 
 		const FVector PlayerToAvailableActorsNormalized = (AvailableActor->GetActorLocation() - PlayerLocation).GetSafeNormal();
-
 		const FVector CrossResult = FVector::CrossProduct(PlayerToCurrentLockedActorNormalized, PlayerToAvailableActorsNormalized);
 
 		if (CrossResult.Z > 0.f)
@@ -275,11 +295,8 @@ void UHeroGameplayAbility_TargetLock::InitTargetLockMappingContext()
 {
 	const ULocalPlayer* LocalPlayer = GetHeroControllerFromActorInfo()->GetLocalPlayer();
 	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer);
-
 	check(Subsystem);
-
 	checkf(TargetLockMappingContext, TEXT("Forget to assign Local Mapping Context in Blueprint"));
-
 	Subsystem->AddMappingContext(TargetLockMappingContext, 3);
 }
 
@@ -322,6 +339,7 @@ void UHeroGameplayAbility_TargetLock::ResetTargetLockMappingContext()
 {
 	if (!GetHeroControllerFromActorInfo())
 	{
+		// If end game when target locked, function EndAbility will be called and GetHeroControllerFromActorInfo will return nullptr
 		return;
 	}
 

@@ -176,11 +176,23 @@ void ACombatHeroCharacter::Input_SwitchTargetTriggered(const FInputActionValue& 
 
 void ACombatHeroCharacter::Input_SwitchTargetCompleted(const FInputActionValue& InputActionValue)
 {
-	UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(
-		this,
-		SwitchDirection.X > 0.f ? CombatGameplayTags::Player_Event_SwithchTarget_Right : CombatGameplayTags::Player_Event_SwithchTarget_Left,
-		FGameplayEventData()
-	);
+	if (SwitchDirection.X >= 0.8f)
+	{
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(
+			this,
+			CombatGameplayTags::Player_Event_SwithchTarget_Right,
+			FGameplayEventData()
+		);
+	}
+
+	if (SwitchDirection.X <= -0.8f)
+	{
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(
+			this,
+			CombatGameplayTags::Player_Event_SwithchTarget_Left,
+			FGameplayEventData()
+		);
+	}
 }
 
 void ACombatHeroCharacter::Input_PickUpStonesStarted(const FInputActionValue& InputActionValue)

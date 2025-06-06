@@ -99,6 +99,7 @@ protected:
 	void SetTimer(FTimerHandle& InTimerHandle, FTimerDelegate& InTimerDelegate);
 	void OnAbilityEndTimerFinished();
 	
+	// Set Wait Montage Event Task
 	void SetWaitMontageEventTask(FGameplayTag& InEventTag);
 
 	UFUNCTION()

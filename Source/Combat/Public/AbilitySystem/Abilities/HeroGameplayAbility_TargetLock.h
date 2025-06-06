@@ -48,19 +48,13 @@ private:
 	UPROPERTY(EditDefaultsOnly)
 	float TargetLockCameraOffsetDistance = 20.f;
 
-	UPROPERTY()
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag WaitMontageEventTag;
+
 	TArray<AActor*> AvailableActorsToLock;
-
-	UPROPERTY()
 	AActor* CurrentLockedActor = nullptr;
-
-	UPROPERTY()
 	UCombatWidgetBase* TargetLockWidget = nullptr;
-
-	UPROPERTY()
 	FVector2D TargetLockWidgetSize = FVector2D::ZeroVector;
-
-	UPROPERTY()
 	float CachedDefaultMaxWalkSpeed = 0.f;
 
 protected:
@@ -69,14 +63,21 @@ protected:
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 	//~ End UgameplayAbility Interface ~//
 
-	UFUNCTION(BlueprintCallable)
+	// Set Tick Task
+	void SetTickTask();
+
+	UFUNCTION()
 	void OnTargetLockTick(float DeltaTime);
 
-	UFUNCTION(BlueprintCallable)
-	void SwitchTarget(const FGameplayTag& InSwitchDirectionTag);
+	// Set Wait Montage Event Task
+	void SetWaitMontageEventTask(FGameplayTag& InEventTag);
+
+	UFUNCTION()
+	void OnEventReceived(FGameplayEventData InEventData);
 
 private:
 	void TryLockOnTarget();
+	void SwitchTarget(const FGameplayTag& InSwitchDirectionTag);
 	void GetAvailableActorsToLock();
 	AActor* GetNearestTargetFromAvailableActors(const TArray<AActor*>& InAvailableActors);
 	void GetAvailableActorsAroundTarget(TArray<AActor*>& OutActorsOnLeft, TArray<AActor*>& OutActorsOnRight);
