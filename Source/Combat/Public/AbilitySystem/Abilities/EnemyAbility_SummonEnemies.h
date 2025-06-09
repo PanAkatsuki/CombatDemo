@@ -3,40 +3,46 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AbilitySystem/Abilities/CombatHeroGameplayAbility.h"
-#include "HeroAbility_CounterAttack.generated.h"
+#include "AbilitySystem/Abilities/CombatEnemyGameplayAbility.h"
+#include "EnemyAbility_SummonEnemies.generated.h"
 
 
-USTRUCT(BlueprintType)
-struct FCounterAttackTagSet
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditDefaultsOnly)
-	FGameplayTag WeaponHitSoundGameplayCueTag;
-};
+//USTRUCT(BlueprintType)
+//struct FEnemySummonTagSet
+//{
+//	GENERATED_BODY()
+//
+//public:
+//	UPROPERTY(EditDefaultsOnly)
+//	FGameplayTag WaitMontageEventTag;
+//};
 
 /**
  * 
  */
 UCLASS()
-class COMBAT_API UHeroAbility_CounterAttack : public UCombatHeroGameplayAbility
+class COMBAT_API UEnemyAbility_SummonEnemies : public UCombatEnemyGameplayAbility
 {
 	GENERATED_BODY()
 	
 public:
-	UHeroAbility_CounterAttack();
+	UEnemyAbility_SummonEnemies();
 
 protected:
 	UPROPERTY(EditDefaultsOnly)
 	TMap<int32, UAnimMontage*> MontagesMap;
 
-	UPROPERTY(EditDefaultsOnly)
-	FCounterAttackTagSet TagSet;
+	/*UPROPERTY(EditDefaultsOnly)
+	FEnemySummonTagSet TagSet;*/
 
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UGameplayEffect> DealDamageEffectClass;
+	TSoftClassPtr<ACombatEnemyCharacter> EnemyClassToSpawn;
+
+	UPROPERTY(EditDefaultsOnly)
+	int32 NumToSpawn = 1;
+
+	UPROPERTY(EditDefaultsOnly)
+	float RandomSpawnRadius = 200.f;
 
 protected:
 	//~ Begin UGameplayAbility Interface ~//
@@ -44,7 +50,7 @@ protected:
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 	//~ End UgameplayAbility Interface ~//
 
-	// Set Montage Task
+	// Montage task
 	void SetPlayMontageTask();
 	UAnimMontage* FindMontageToPlay();
 
@@ -60,13 +66,9 @@ protected:
 	UFUNCTION()
 	void OnMontageCancelled();
 
-	// Set Wait Event Task
-	void SetWaitMontageEventTask();
+	//Wait event task
+	void SetWaitSpawnEventTask();
 
 	UFUNCTION()
-	void OnEventReceived(FGameplayEventData InEventData);
-
-	void ExecuteGameplayCueOnOnwer() const;
-	FGameplayEffectSpecHandle MakeAttackDamageSpecHandle();
-	void HandleDamage(FGameplayEventData& InEventData, FGameplayEffectSpecHandle& InGameplayEffectSpecHandle);
+	void OnEventReceived(const TArray<ACombatEnemyCharacter*>& SpawnedEnemies);
 };

@@ -22,36 +22,6 @@ void UPawnFightComponent::OnWeaponPulledFromTargetActor(AActor* InteractedActor)
 {
 }
 
-void UPawnFightComponent::ToggleCurrentEquippedWeaponCollision(bool bShouldEnable)
-{
-	ACombatWeaponBase* WeaponToToggle = GetCharacterCurrentEquippedWeapon();
-
-	//checkf(WeaponToToggle, TEXT("WeaponToToggle is not valid."));
-
-	if (!WeaponToToggle)
-	{
-		Debug::Print(TEXT("PawnFightComponent.cpp line 34: WeaponToToggle is not valid."));
-		return;
-	}
-
-	if (bShouldEnable)
-	{
-		WeaponToToggle->GetWeaponCollisionBox()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	}
-	else
-	{
-		WeaponToToggle->GetWeaponCollisionBox()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-		// Empty overlapped actors should be calld when set weapon collision to no collision
-		AttackOverlappedActors.Empty();
-	}
-}
-
-void UPawnFightComponent::ToggleBodyAttackCollision(bool bShouldEnable, EToggleDamageType ToggleDamageType)
-{
-
-}
-
 void UPawnFightComponent::RegisterSpawnedWeapon(FGameplayTag InWeaponTagToRegister, ACombatWeaponBase* InWeaponToRegister, bool bRegisterAsEquippedWeapon)
 {
 	checkf(!CharacterCarriedWeaponMap.Contains(InWeaponTagToRegister), TEXT("%s has been registered!"), *InWeaponTagToRegister.ToString());
@@ -114,3 +84,32 @@ void UPawnFightComponent::ToggleWeaponCollision(bool bShouldEnable, EToggleDamag
 	}
 }
 
+void UPawnFightComponent::ToggleCurrentEquippedWeaponCollision(bool bShouldEnable)
+{
+	ACombatWeaponBase* WeaponToToggle = GetCharacterCurrentEquippedWeapon();
+
+	//checkf(WeaponToToggle, TEXT("WeaponToToggle is not valid."));
+
+	if (!WeaponToToggle)
+	{
+		Debug::Print(TEXT("PawnFightComponent.cpp line 34: WeaponToToggle is not valid."));
+		return;
+	}
+
+	if (bShouldEnable)
+	{
+		WeaponToToggle->GetWeaponCollisionBox()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	}
+	else
+	{
+		WeaponToToggle->GetWeaponCollisionBox()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+		// Empty overlapped actors should be calld when set weapon collision to no collision
+		AttackOverlappedActors.Empty();
+	}
+}
+
+void UPawnFightComponent::ToggleBodyAttackCollision(bool bShouldEnable, EToggleDamageType ToggleDamageType)
+{
+
+}

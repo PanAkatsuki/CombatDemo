@@ -73,7 +73,6 @@ void UHeroAbility_Death::SetPlayMontageTask(TMap<int32, UAnimMontage*>& InMontag
 UAnimMontage* UHeroAbility_Death::FindMontageToPlay(TMap<int32, UAnimMontage*>& InMontagesMap)
 {
 	int32 RandomInt = FMath::RandRange(1, InMontagesMap.Num());
-
 	UAnimMontage* const* MontagePtr = InMontagesMap.Find(RandomInt);
 
 	return MontagePtr ? *MontagePtr : nullptr;

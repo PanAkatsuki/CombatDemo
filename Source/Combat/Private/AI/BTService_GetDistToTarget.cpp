@@ -62,7 +62,7 @@ void UBTService_GetDistToTarget::TickNode(UBehaviorTreeComponent& OwnerComp, uin
 	}
 	else
 	{
-		Debug::Print(TEXT("In UBTService_GetDistToTarget::TickNode, TargetActor is null!"));
+		// TargetActor is null
 	}
 	
 }

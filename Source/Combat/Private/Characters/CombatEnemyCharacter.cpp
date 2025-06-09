@@ -59,11 +59,12 @@ ACombatEnemyCharacter::ACombatEnemyCharacter()
 	EnemyHealthWidgetComponent->SetupAttachment(this->GetMesh());
 
 	// Init Timeline
+	EnterTimelineAttributeSet.EnterTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("EnterTimeline"));
 	DissolveTimelineAttributeSet.DissolveTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("DissolveTimeline"));
 
 	// Set LatentInfo
 	DestroyEnemyAttributeSet.DestroyEnemyCharacterLatentInfo.CallbackTarget = this;
-	DestroyEnemyAttributeSet.DestroyEnemyCharacterLatentInfo.ExecutionFunction = FName("OnSpawnStoneEnd");
+	DestroyEnemyAttributeSet.DestroyEnemyCharacterLatentInfo.ExecutionFunction = FName("OnDelayForSpawnStoneEnd");
 	DestroyEnemyAttributeSet.DestroyEnemyCharacterLatentInfo.Linkage = 0;
 	DestroyEnemyAttributeSet.DestroyEnemyCharacterLatentInfo.UUID = 2;
 }
@@ -78,6 +79,29 @@ void ACombatEnemyCharacter::PossessedBy(AController* NewController)
 void ACombatEnemyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// Set Timeline with EnterCurve
+	if (EnterTimelineAttributeSet.EnterTimeline && EnterTimelineAttributeSet.EnterCurve)
+	{
+		FOnTimelineFloat EnterTimelineProgress;
+		EnterTimelineProgress.BindUFunction(this, FName("OnEnterTimelineUpdate"));
+		EnterTimelineAttributeSet.EnterTimeline->AddInterpFloat(EnterTimelineAttributeSet.EnterCurve, EnterTimelineProgress);
+
+		FOnTimelineEvent EnterTimelineFinished;
+		EnterTimelineFinished.BindUFunction(this, FName("OnEnterTimelineFinished"));
+		EnterTimelineAttributeSet.EnterTimeline->SetTimelineFinishedFunc(EnterTimelineFinished);
+
+		// Start EnterTimeline
+		EnterTimelineAttributeSet.EnterTimeline->SetPlayRate(1 / EnterTimelineAttributeSet.EnterTime);
+		EnterTimelineAttributeSet.EnterTimeline->PlayFromStart();
+	}
+
+	// Play Enter Montages
+	if (EnterMontagesMap.Num())
+	{
+		int32 RandomInt = FMath::RandRange(1, EnterMontagesMap.Num());
+		PlayAnimMontage(*EnterMontagesMap.Find(RandomInt));
+	}
 
 	// Set Timeline with DissolveCurve
 	if (DissolveTimelineAttributeSet.DissolveTimeline && DissolveTimelineAttributeSet.DissolveCurve)
@@ -142,9 +166,11 @@ UPawnFightComponent* ACombatEnemyCharacter::GetPawnFightComponent() const
 void ACombatEnemyCharacter::OnEnemyDied(TSoftObjectPtr<UNiagaraSystem>& InDissolveNiagaraSystem)
 {
 	GetMesh()->bPauseAnims = true;
+
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
 	EnemyUIComponent->RemoveEnemyDrawnWidgetsIfAny();
-	//Debug::Print(TEXT("EnemyDied!"));
+
 	AsyncLoadNiagaraSystem(InDissolveNiagaraSystem);
 }
 
@@ -223,6 +249,7 @@ void ACombatEnemyCharacter::OnAsyncLoadNiagaraSystemFinished()
 {
 	if (UNiagaraSystem* LoadedSystem = DissolveNiagaraSystem.Get())
 	{
+		// Set Niagara
 		UNiagaraComponent* NiagaraComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(
 			LoadedSystem,
 			GetMesh(),
@@ -234,6 +261,7 @@ void ACombatEnemyCharacter::OnAsyncLoadNiagaraSystemFinished()
 		);
 
 		UMaterialInstanceDynamic* MaterialInstanceDynamic = GetMesh()->CreateDynamicMaterialInstance(0, GetMesh()->GetMaterial(0));
+
 		FHashedMaterialParameterInfo HashedMaterialParameterInfo = FHashedMaterialParameterInfo(FName("DissolveEdgeColor"));
 		FLinearColor LinearColor;
 		MaterialInstanceDynamic->GetVectorParameterValue(HashedMaterialParameterInfo, LinearColor);
@@ -248,6 +276,15 @@ void ACombatEnemyCharacter::OnAsyncLoadNiagaraSystemFinished()
 	{
 		Debug::Print(TEXT("In OnAsyncLoadNiagaraSystemFinished, NiagaraSystem load failed!"));
 	}
+}
+
+void ACombatEnemyCharacter::OnEnterTimelineUpdate(float InValue)
+{
+	SetScalarParameterValueOnMaterial(InValue);
+}
+
+void ACombatEnemyCharacter::OnEnterTimelineFinished()
+{
 }
 
 void ACombatEnemyCharacter::OnDissolveTimelineUpdate(float InValue)
@@ -283,14 +320,11 @@ void ACombatEnemyCharacter::DestroyEnemyCharacter()
 
 	GetCombatAbilitySystemComponent()->TryAcitivateAbilityByTag(CombatGameplayTags::Enemy_Ability_SpawnStone);
 
-	UWorld* World = GEngine->GetWorldFromContextObject(this, EGetWorldErrorMode::LogAndReturnNull);
-
-	check(World);
-
-	UKismetSystemLibrary::Delay(World, DestroyEnemyAttributeSet.DestroyEnemyCharacterDelayDuration, DestroyEnemyAttributeSet.DestroyEnemyCharacterLatentInfo);
+	check(GetWorld());
+	UKismetSystemLibrary::Delay(GetWorld(), DestroyEnemyAttributeSet.DestroyEnemyCharacterDelayDuration, DestroyEnemyAttributeSet.DestroyEnemyCharacterLatentInfo);
 }
 
-void ACombatEnemyCharacter::OnSpawnStoneEnd()
+void ACombatEnemyCharacter::OnDelayForSpawnStoneEnd()
 {
 	this->Destroy();
 }

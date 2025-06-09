@@ -17,16 +17,6 @@ UCLASS()
 class COMBAT_API UAbilityTask_WaitSpawnEnemies : public UAbilityTask
 {
 	GENERATED_BODY()
-	
-private:
-	void OnGameplayEventReceived(const FGameplayEventData* InPayload);
-	void OnEnemyClassLoaded();
-
-public:
-	//~ Begin UGameplayTask Interface
-	virtual void Activate() override;
-	virtual void OnDestroy(bool bInOwnerFinished) override;
-	//~ End UGameplayTask Interface
 
 private:
 	FGameplayTag CachedEventTag;
@@ -35,9 +25,9 @@ private:
 	FVector CachedSpawnOrigin;
 	float CachedRandomSpawnRadius;
 
+public:
 	FDelegateHandle DelegateHandle;
 
-public:
 	UPROPERTY(BlueprintAssignable)
 	FWaitSpawnEnemiesDelegate OnSpawnFinished;
 
@@ -65,4 +55,13 @@ public:
 		const FVector& SpawnOrigin,
 		float RandomSpawnRadius
 	);
+
+	//~ Begin UGameplayTask Interface
+	virtual void Activate() override;
+	virtual void OnDestroy(bool bInOwnerFinished) override;
+	//~ End UGameplayTask Interface
+
+private:
+	void OnGameplayEventReceived(const FGameplayEventData* InPayload);
+	void OnEnemyClassLoaded();
 };

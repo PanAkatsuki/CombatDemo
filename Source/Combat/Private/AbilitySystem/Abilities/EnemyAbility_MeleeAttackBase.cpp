@@ -32,6 +32,7 @@ void UEnemyAbility_MeleeAttackBase::EndAbility(const FGameplayAbilitySpecHandle 
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 
+	GetPawnFightComponentFromActorInfo()->ToggleWeaponCollision(false, AttackType);
 }
 
 void UEnemyAbility_MeleeAttackBase::CheckIfShouldPlayUnblockableAttackWarning()
@@ -74,28 +75,24 @@ void UEnemyAbility_MeleeAttackBase::OnMontageCompleted()
 {
 	//Debug::Print(TEXT("MontageCompleted"));
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
-	GetPawnFightComponentFromActorInfo()->ToggleWeaponCollision(false, AttackType);
 }
 
 void UEnemyAbility_MeleeAttackBase::OnMontageBlendOut()
 {
 	//Debug::Print(TEXT("MontageBlendOut"));
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
-	GetPawnFightComponentFromActorInfo()->ToggleWeaponCollision(false, AttackType);
 }
 
 void UEnemyAbility_MeleeAttackBase::OnMontageInterrupted()
 {
 	//Debug::Print(TEXT("MontageInterrupted"));
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, true);
-	GetPawnFightComponentFromActorInfo()->ToggleWeaponCollision(false, AttackType);
 }
 
 void UEnemyAbility_MeleeAttackBase::OnMontageCancelled()
 {
 	//Debug::Print(TEXT("MontageCancelled"));
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, true);
-	GetPawnFightComponentFromActorInfo()->ToggleWeaponCollision(false, AttackType);
 }
 
 void UEnemyAbility_MeleeAttackBase::SetWaitMontageEventTask(FGameplayTag& InWaitMontageEventTag)
@@ -145,6 +142,6 @@ void UEnemyAbility_MeleeAttackBase::HandleDamage(FGameplayEventData& InEventData
 	}
 	else
 	{
-		Debug::Print(TEXT("In UEnemyAbility_MeleeAttackBase::HandleDamage, ActiveGameplayEffectHandle was not successfully applied!"));
+		// TargeActor has tag invisible
 	}
 }

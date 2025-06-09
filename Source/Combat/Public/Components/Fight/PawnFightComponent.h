@@ -47,10 +47,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat|Fight")
 	ACombatWeaponBase* CurrentEquippedWeapon;
 
-protected:
-	virtual void ToggleCurrentEquippedWeaponCollision(bool bShouldEnable);
-	virtual void ToggleBodyAttackCollision(bool bShouldEnable, EToggleDamageType ToggleDamageType);
-
 public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|Fight")
 	void RegisterSpawnedWeapon(FGameplayTag InWeaponTagToRegister, ACombatWeaponBase* InWeaponToRegister, bool bRegisterAsEquippedWeapon = false);
@@ -70,5 +66,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|Fight")
 	void ToggleWeaponCollision(bool bShouldEnable, EToggleDamageType ToggleDamageType = EToggleDamageType::CurrentEquippedWeapon);
 
-	
+protected:
+	virtual void ToggleCurrentEquippedWeaponCollision(bool bShouldEnable);
+	virtual void ToggleBodyAttackCollision(bool bShouldEnable, EToggleDamageType ToggleDamageType);
 };

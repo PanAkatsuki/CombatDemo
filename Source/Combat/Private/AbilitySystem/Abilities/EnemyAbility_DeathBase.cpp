@@ -16,7 +16,7 @@ UEnemyAbility_DeathBase::UEnemyAbility_DeathBase()
 	// Set AbilityTriggerData
 	FAbilityTriggerData AbilityTriggerData = FAbilityTriggerData();
 	AbilityTriggerData.TriggerTag = CombatGameplayTags::Shared_Status_Death;
-	AbilityTriggerData.TriggerSource = EGameplayAbilityTriggerSource::GameplayEvent;
+	AbilityTriggerData.TriggerSource = EGameplayAbilityTriggerSource::OwnedTagAdded;
 	AbilityTriggers.Add(AbilityTriggerData);
 }
 
@@ -24,7 +24,7 @@ void UEnemyAbility_DeathBase::ActivateAbility(const FGameplayAbilitySpecHandle H
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	SetPlayMontageTask(MontagesMap);
+	SetPlayMontageTask();
 	ExecuteGameplayCueOnOnwer(DeathSoundGameplayCueTag);
 }
 
@@ -35,14 +35,14 @@ void UEnemyAbility_DeathBase::EndAbility(const FGameplayAbilitySpecHandle Handle
 	GetEnemyCharacterFromActorInfo()->OnEnemyDied(DissolveNiagaraSystem);
 }
 
-void UEnemyAbility_DeathBase::SetPlayMontageTask(TMap<int32, UAnimMontage*>& InMontagesMap)
+void UEnemyAbility_DeathBase::SetPlayMontageTask()
 {
 	check(MontagesMap.Num());
 
 	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
 		this,
 		FName("PlayEnemyDeathMontageTask"),
-		FindMontageToPlay(InMontagesMap),
+		FindMontageToPlay(),
 		1.0f
 	);
 
@@ -54,11 +54,10 @@ void UEnemyAbility_DeathBase::SetPlayMontageTask(TMap<int32, UAnimMontage*>& InM
 	PlayMontageTask->ReadyForActivation();
 }
 
-UAnimMontage* UEnemyAbility_DeathBase::FindMontageToPlay(TMap<int32, UAnimMontage*>& InMontagesMap)
+UAnimMontage* UEnemyAbility_DeathBase::FindMontageToPlay()
 {
-	int32 RandomInt = FMath::RandRange(1, InMontagesMap.Num());
-
-	UAnimMontage* const* MontagePtr = InMontagesMap.Find(RandomInt);
+	int32 RandomInt = FMath::RandRange(1, MontagesMap.Num());
+	UAnimMontage* const* MontagePtr = MontagesMap.Find(RandomInt);
 
 	return MontagePtr ? *MontagePtr : nullptr;
 }

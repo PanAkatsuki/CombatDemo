@@ -9,6 +9,8 @@
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "AbilitySystem/CombatAbilitySystemComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
+#include "CombatFunctionLibrary.h"
+#include "CombatGameplayTags.h"
 
 #include "CombatDebugHelper.h"
 
@@ -22,24 +24,27 @@ void UHeroAbility_CounterAttack::ActivateAbility(const FGameplayAbilitySpecHandl
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	SetPlayMontageTask(MontageSet);
-	SetWaitMontageEventTask(TagSet.WaitMontageEventTag);
+	SetPlayMontageTask();
+	SetWaitMontageEventTask();
 }
 
 void UHeroAbility_CounterAttack::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 
+	GetPawnFightComponentFromActorInfo()->ToggleWeaponCollision(false);
+	UCombatFunctionLibrary::RemoveGameplayTagFromActorIfFound(GetHeroCharacterFromActorInfo(), CombatGameplayTags::Player_Status_CanCounterAttack);
+	UCombatFunctionLibrary::RemoveGameplayTagFromActorIfFound(GetHeroCharacterFromActorInfo(), CombatGameplayTags::Player_Status_JumpToFinisher);
 }
 
-void UHeroAbility_CounterAttack::SetPlayMontageTask(TMap<int32, UAnimMontage*>& InMontagesMap)
+void UHeroAbility_CounterAttack::SetPlayMontageTask()
 {
-	check(InMontagesMap.Num());
+	check(MontagesMap.Num());
 
 	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
 		this,
 		FName("PlayCounterAttackMontageTask"),
-		FindMontageToPlay(InMontagesMap),
+		FindMontageToPlay(),
 		1.0f
 	);
 
@@ -51,11 +56,10 @@ void UHeroAbility_CounterAttack::SetPlayMontageTask(TMap<int32, UAnimMontage*>& 
 	PlayMontageTask->ReadyForActivation();
 }
 
-UAnimMontage* UHeroAbility_CounterAttack::FindMontageToPlay(TMap<int32, UAnimMontage*>& InMontagesMap)
+UAnimMontage* UHeroAbility_CounterAttack::FindMontageToPlay()
 {
-	int32 RandomInt = FMath::RandRange(1, InMontagesMap.Num());
-
-	UAnimMontage* const* MontagePtr = InMontagesMap.Find(RandomInt);
+	int32 RandomInt = FMath::RandRange(1, MontagesMap.Num());
+	UAnimMontage* const* MontagePtr = MontagesMap.Find(RandomInt);
 
 	return MontagePtr ? *MontagePtr : nullptr;
 }
@@ -64,39 +68,31 @@ void UHeroAbility_CounterAttack::OnMontageCompleted()
 {
 	//Debug::Print(TEXT("MontageCompleted"));
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
-
-	GetPawnFightComponentFromActorInfo()->ToggleWeaponCollision(false);
 }
 
 void UHeroAbility_CounterAttack::OnMontageBlendOut()
 {
 	//Debug::Print(TEXT("MontageBlendOut"));
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, false);
-
-	GetPawnFightComponentFromActorInfo()->ToggleWeaponCollision(false);
 }
 
 void UHeroAbility_CounterAttack::OnMontageInterrupted()
 {
 	//Debug::Print(TEXT("MontageInterrupted"));
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, true);
-
-	GetPawnFightComponentFromActorInfo()->ToggleWeaponCollision(false);
 }
 
 void UHeroAbility_CounterAttack::OnMontageCancelled()
 {
 	//Debug::Print(TEXT("MontageCancelled"));
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, true);
-
-	GetPawnFightComponentFromActorInfo()->ToggleWeaponCollision(false);
 }
 
-void UHeroAbility_CounterAttack::SetWaitMontageEventTask(FGameplayTag& InEventTag)
+void UHeroAbility_CounterAttack::SetWaitMontageEventTask()
 {
 	UAbilityTask_WaitGameplayEvent* WaitEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
 		this,
-		InEventTag,
+		CombatGameplayTags::Player_Event_CounterAttack,
 		nullptr,
 		false,
 		true
@@ -109,49 +105,43 @@ void UHeroAbility_CounterAttack::SetWaitMontageEventTask(FGameplayTag& InEventTa
 
 void UHeroAbility_CounterAttack::OnEventReceived(FGameplayEventData InEventData)
 {
-	ExecuteGameplayCueOnOnwer(TagSet.WeaponHitSoundGameplayCueTag);
+	ExecuteGameplayCueOnOnwer();
 
-	int32 ComboCount = 1;
-	FGameplayEffectSpecHandle GameplayEffectSpecHandle = MakeAttackDamageSpecHandle(
-		GameplayEffect,
-		TagSet.SetByCallerAttackTypeTag,
-		ComboCount
-	);
+	FGameplayEffectSpecHandle GameplayEffectSpecHandle = MakeAttackDamageSpecHandle();
 
-	HandleDamage(InEventData, GameplayEffectSpecHandle, TagSet);
+	HandleDamage(InEventData, GameplayEffectSpecHandle);
 }
 
-void UHeroAbility_CounterAttack::ExecuteGameplayCueOnOnwer(FGameplayTag& InGameplayCueTag) const
+void UHeroAbility_CounterAttack::ExecuteGameplayCueOnOnwer() const
 {
-	// Should make sure InGameplayCueTag is a GameplayCueTag
-
 	FGameplayCueParameters GameplayCueParameters;
 	GameplayCueParameters.NormalizedMagnitude = 1.f;
 	GameplayCueParameters.Location = CurrentActorInfo->AvatarActor.Get()->GetActorLocation();
 
-	CurrentActorInfo->AbilitySystemComponent->ExecuteGameplayCue(InGameplayCueTag, GameplayCueParameters);
+	CurrentActorInfo->AbilitySystemComponent->ExecuteGameplayCue(TagSet.WeaponHitSoundGameplayCueTag, GameplayCueParameters);
 }
 
-FGameplayEffectSpecHandle UHeroAbility_CounterAttack::MakeAttackDamageSpecHandle(TSubclassOf<UGameplayEffect>& InDealDamageEffectClass, FGameplayTag& InSetByCallerAttackTypeTag, int32& InUsedAttackComboCount)
+FGameplayEffectSpecHandle UHeroAbility_CounterAttack::MakeAttackDamageSpecHandle()
 {
 	float BaseWeaponDamage = GetHeroFightComponentFromActorInfo()->GetHeroCurrentEquippedWeaponDamageAtLevel(GetAbilityLevel());
+	const int32 UsedComboCount = 1;
 	FGameplayEffectSpecHandle GameplayEffectSpecHandle = MakeHeroDamageEffectsSpecHandle(
-		InDealDamageEffectClass,
+		DealDamageEffectClass,
 		BaseWeaponDamage,
-		InSetByCallerAttackTypeTag,
-		InUsedAttackComboCount
+		CombatGameplayTags::Player_SetByCaller_AttackType_CounterAttack,
+		UsedComboCount
 	);
 
 	return GameplayEffectSpecHandle;
 }
 
-void UHeroAbility_CounterAttack::HandleDamage(FGameplayEventData& InEventData, FGameplayEffectSpecHandle& InGameplayEffectSpecHandle, FCounterAttackTagSet& InTagSet)
+void UHeroAbility_CounterAttack::HandleDamage(FGameplayEventData& InEventData, FGameplayEffectSpecHandle& InGameplayEffectSpecHandle)
 {
 	AActor* TargetActor = const_cast<AActor*>(InEventData.Target.Get());
 	FActiveGameplayEffectHandle ActiveGameplayEffectHandle = NativeApplyEffectSpecHandleToTarget(TargetActor, InGameplayEffectSpecHandle);
 
 	if (ActiveGameplayEffectHandle.WasSuccessfullyApplied())
 	{
-		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(TargetActor, InTagSet.TargetHitReactEventTag, InEventData);
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(TargetActor, CombatGameplayTags::Shared_Event_HitReact, InEventData);
 	}
 }

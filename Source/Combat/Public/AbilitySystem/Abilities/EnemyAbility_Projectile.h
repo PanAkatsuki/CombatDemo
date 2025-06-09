@@ -3,40 +3,49 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AbilitySystem/Abilities/CombatHeroGameplayAbility.h"
-#include "HeroAbility_CounterAttack.generated.h"
+#include "AbilitySystem/Abilities/CombatEnemyGameplayAbility.h"
+#include "EnemyAbility_Projectile.generated.h"
+
+
+class ACombatProjectileBase;
 
 
 USTRUCT(BlueprintType)
-struct FCounterAttackTagSet
+struct FEnemyProjectileAttackTagSet
 {
 	GENERATED_BODY()
 
 public:
 	UPROPERTY(EditDefaultsOnly)
-	FGameplayTag WeaponHitSoundGameplayCueTag;
+	FGameplayTag WaitMontageEventTag;
 };
 
 /**
  * 
  */
 UCLASS()
-class COMBAT_API UHeroAbility_CounterAttack : public UCombatHeroGameplayAbility
+class COMBAT_API UEnemyAbility_Projectile : public UCombatEnemyGameplayAbility
 {
 	GENERATED_BODY()
 	
 public:
-	UHeroAbility_CounterAttack();
+	UEnemyAbility_Projectile();
 
 protected:
 	UPROPERTY(EditDefaultsOnly)
 	TMap<int32, UAnimMontage*> MontagesMap;
 
 	UPROPERTY(EditDefaultsOnly)
-	FCounterAttackTagSet TagSet;
+	TSubclassOf<ACombatProjectileBase> ProjectileToSpawn;
 
 	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UGameplayEffect> DealDamageEffectClass;
+	TSubclassOf<UGameplayEffect> DealDamageEffect;
+
+	UPROPERTY(EditDefaultsOnly)
+	FScalableFloat ScalableFloat;
+
+	UPROPERTY(EditDefaultsOnly)
+	FEnemyProjectileAttackTagSet TagSet;
 
 protected:
 	//~ Begin UGameplayAbility Interface ~//
@@ -45,8 +54,8 @@ protected:
 	//~ End UgameplayAbility Interface ~//
 
 	// Set Montage Task
-	void SetPlayMontageTask();
-	UAnimMontage* FindMontageToPlay();
+	void SetPlayMontageTask(TMap<int32, UAnimMontage*>& InMontagesMap);
+	UAnimMontage* FindMontageToPlay(TMap<int32, UAnimMontage*>& InMontagesMap);
 
 	UFUNCTION()
 	void OnMontageCompleted();
@@ -60,13 +69,9 @@ protected:
 	UFUNCTION()
 	void OnMontageCancelled();
 
-	// Set Wait Event Task
-	void SetWaitMontageEventTask();
+	// Set Wait Montage Event Task
+	void SetWaitMontageEventTask(FGameplayTag& InEventTag);
 
 	UFUNCTION()
 	void OnEventReceived(FGameplayEventData InEventData);
-
-	void ExecuteGameplayCueOnOnwer() const;
-	FGameplayEffectSpecHandle MakeAttackDamageSpecHandle();
-	void HandleDamage(FGameplayEventData& InEventData, FGameplayEffectSpecHandle& InGameplayEffectSpecHandle);
 };

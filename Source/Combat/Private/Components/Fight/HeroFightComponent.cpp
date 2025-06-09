@@ -12,10 +12,11 @@
 
 void UHeroFightComponent::OnHitTargetActor(AActor* HitActor)
 {
-    //if (AttackOverlappedActors.Contains(HitActor))
-    //{
-    //    return;
-    //}
+    // For boss with multiply collision box
+    if (AttackOverlappedActors.Contains(HitActor))
+    {
+        return;
+    }
 
     Super::OnHitTargetActor(HitActor);
 

@@ -6,6 +6,7 @@
 #include "BehaviorTree/BTDecorator.h"
 #include "BTDecorator_ShouldAbortAllLogic.generated.h"
 
+
 /**
  * 
  */
@@ -24,8 +25,12 @@ protected:
 	UPROPERTY(EditAnywhere)
 	FGameplayTag TagToCheck;
 
+private:
+	TWeakObjectPtr<AActor> CachedActor;
+
 protected:
 	//~ Begin UBTDecorator Interface.
+	virtual void TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
 	virtual bool CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const override;
 	virtual FString GetStaticDescription() const override;
 	//~ End UBTDecorator Interface

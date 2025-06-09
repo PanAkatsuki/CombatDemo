@@ -18,6 +18,22 @@ class UNiagaraSystem;
 class UTimelineComponent;
 
 USTRUCT(BlueprintType)
+struct FEnterTimelineAttributeSet
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY()
+	UTimelineComponent* EnterTimeline;
+
+	UPROPERTY(EditDefaultsOnly)
+	float EnterTime = 2.0f;
+
+	UPROPERTY(EditDefaultsOnly)
+	UCurveFloat* EnterCurve;
+};
+
+USTRUCT(BlueprintType)
 struct FDissolveTimelineAttributeSet
 {
 	GENERATED_BODY()
@@ -100,6 +116,12 @@ protected:
 	UWidgetComponent* EnemyHealthWidgetComponent;
 
 	UPROPERTY(EditDefaultsOnly)
+	FEnterTimelineAttributeSet EnterTimelineAttributeSet;
+
+	UPROPERTY(EditDefaultsOnly)
+	TMap<int32, UAnimMontage*> EnterMontagesMap;
+
+	UPROPERTY(EditDefaultsOnly)
 	FDissolveTimelineAttributeSet DissolveTimelineAttributeSet;
 
 	UPROPERTY(EditDefaultsOnly)
@@ -135,6 +157,12 @@ protected:
 
 	// Timeline
 	UFUNCTION()
+	void OnEnterTimelineUpdate(float InValue);
+
+	UFUNCTION()
+	void OnEnterTimelineFinished();
+
+	UFUNCTION()
 	void OnDissolveTimelineUpdate(float InValue);
 
 	UFUNCTION()
@@ -147,6 +175,6 @@ protected:
 	void DestroyEnemyCharacter();
 
 	UFUNCTION()
-	void OnSpawnStoneEnd();
+	void OnDelayForSpawnStoneEnd();
 
 };

@@ -13,6 +13,36 @@
 UBTDecorator_ShouldAbortAllLogic::UBTDecorator_ShouldAbortAllLogic()
 {
 	InTargetActorKey.AddObjectFilter(this, GET_MEMBER_NAME_CHECKED(ThisClass, InTargetActorKey), AActor::StaticClass());
+
+	bNotifyTick = true;
+}
+
+void UBTDecorator_ShouldAbortAllLogic::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
+{
+	if (!CachedActor.IsValid())
+	{
+		UObject* TargetObject = OwnerComp.GetBlackboardComponent()->GetValueAsObject(InTargetActorKey.SelectedKeyName);
+		if (!TargetObject)
+		{
+			return;
+		}
+		CachedActor = Cast<AActor>(TargetObject);
+	}
+	check(CachedActor.IsValid());
+
+	AActor* TargetActor = CachedActor.Get();
+	check(TargetActor);
+
+	APawn* OwnerPawn = OwnerComp.GetAIOwner() ? OwnerComp.GetAIOwner()->GetPawn() : nullptr;
+	check(OwnerPawn);
+
+	const bool bTargetDead = UCombatFunctionLibrary::NativeDoesActorHaveTag(TargetActor, TagToCheck);
+	const bool bOwnerDead = UCombatFunctionLibrary::NativeDoesActorHaveTag(OwnerPawn, TagToCheck);
+
+	if (bTargetDead || bOwnerDead)
+	{
+		OwnerComp.RequestExecution(this);
+	}
 }
 
 bool UBTDecorator_ShouldAbortAllLogic::CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const
@@ -20,30 +50,19 @@ bool UBTDecorator_ShouldAbortAllLogic::CalculateRawConditionValue(UBehaviorTreeC
 	UObject* TargetObject = OwnerComp.GetBlackboardComponent()->GetValueAsObject(InTargetActorKey.SelectedKeyName);
 	if (!TargetObject)
 	{
-		return false;
+		return true;
 	}
 
 	AActor* TargetActor = Cast<AActor>(TargetObject);
 	check(TargetActor);
 
-	bool bIsTargetDead = false;
-	if (UCombatFunctionLibrary::NativeDoesActorHaveTag(TargetActor, TagToCheck))
-	{
-		bIsTargetDead = true;
-	}
+	APawn* OwnerPawn = OwnerComp.GetAIOwner() ? OwnerComp.GetAIOwner()->GetPawn() : nullptr;
+	check(OwnerPawn);
 
-	bool bIsOwnerDead = false;
-	if (UCombatFunctionLibrary::NativeDoesActorHaveTag(OwnerComp.GetAIOwner()->GetPawn(), TagToCheck))
-	{
-		bIsOwnerDead = true;
-	}
+	const bool bTargetDead = UCombatFunctionLibrary::NativeDoesActorHaveTag(TargetActor, TagToCheck);
+	const bool bOwnerDead = UCombatFunctionLibrary::NativeDoesActorHaveTag(OwnerPawn, TagToCheck);
 
-	if (bIsTargetDead || bIsOwnerDead)
-	{
-		return true;
-	}
-
-	return false;
+	return bTargetDead || bOwnerDead;
 }
 
 FString UBTDecorator_ShouldAbortAllLogic::GetStaticDescription() const

@@ -2,22 +2,22 @@
 
 namespace Debug
 {
-	static void Print(const FString& Msg, const FColor& Color = FColor::MakeRandomColor(), int32 InKey = -1)
+	static void Print(const FString& Msg, int32 InKey = -1, const float TimeToDisplay = 10.f, const FColor& Color = FColor::MakeRandomColor())
 	{
 		if (GEngine)
 		{
-			GEngine->AddOnScreenDebugMessage(InKey, 10.f, Color, Msg);
+			GEngine->AddOnScreenDebugMessage(InKey, TimeToDisplay, Color, Msg);
 			UE_LOG(LogTemp, Warning, TEXT("%s"), *Msg);
 		}
 	}
 
-	static void Print(const FString& FloatTitle, float FloatValueToPrint, int32 InKey = -1, const FColor& Color = FColor::MakeRandomColor())
+	static void Print(const FString& FloatTitle, float FloatValueToPrint, int32 InKey = -1, const float TimeToDisplay = 10.f, const FColor& Color = FColor::MakeRandomColor())
 	{
 		if (GEngine)
 		{
-			const FString FinalMsg = FloatTitle + TEXT(": ") + FString::SanitizeFloat(FloatValueToPrint);
-			GEngine->AddOnScreenDebugMessage(InKey, 10.f, Color, FinalMsg);
-			UE_LOG(LogTemp, Warning, TEXT("%s"), *FinalMsg);
+			const FString Msg = FloatTitle + TEXT(": ") + FString::SanitizeFloat(FloatValueToPrint);
+			GEngine->AddOnScreenDebugMessage(InKey, 10.f, Color, Msg);
+			UE_LOG(LogTemp, Warning, TEXT("%s"), *Msg);
 		}
 	}
 }

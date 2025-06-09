@@ -4,53 +4,34 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystem/Abilities/CombatEnemyGameplayAbility.h"
-#include "EnemyAbility_DeathBase.generated.h"
+#include "BossAbility_DrawBossBar.generated.h"
 
-class UNiagaraSystem;
+
+class UCombatWidgetBase;
 
 /**
  * 
  */
 UCLASS()
-class COMBAT_API UEnemyAbility_DeathBase : public UCombatEnemyGameplayAbility
+class COMBAT_API UBossAbility_DrawBossBar : public UCombatEnemyGameplayAbility
 {
 	GENERATED_BODY()
 	
 public:
-	UEnemyAbility_DeathBase();
+	UBossAbility_DrawBossBar();
 
 protected:
 	UPROPERTY(EditDefaultsOnly)
-	TMap<int32, UAnimMontage*> MontagesMap;
+	TSubclassOf<UCombatWidgetBase> HealthBarWidgetClass;
 
 	UPROPERTY(EditDefaultsOnly)
-	FGameplayTag DeathSoundGameplayCueTag;
+	FText BossName;
 
-	UPROPERTY(EditDefaultsOnly)
-	TSoftObjectPtr<UNiagaraSystem> DissolveNiagaraSystem;
+	UCombatWidgetBase* HealthBarWidget;
 
 protected:
 	//~ Begin UGameplayAbility Interface ~//
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 	//~ End UgameplayAbility Interface ~//
-
-	// Set Play Montage Task
-	void SetPlayMontageTask();
-	UAnimMontage* FindMontageToPlay();
-
-	UFUNCTION()
-	void OnMontageCompleted();
-
-	UFUNCTION()
-	void OnMontageBlendOut();
-
-	UFUNCTION()
-	void OnMontageInterrupted();
-
-	UFUNCTION()
-	void OnMontageCancelled();
-
-	void ExecuteGameplayCueOnOnwer(FGameplayTag& InGameplayCueTag) const;
-
 };
