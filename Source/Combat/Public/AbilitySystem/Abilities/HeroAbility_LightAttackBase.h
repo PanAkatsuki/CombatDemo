@@ -6,7 +6,11 @@
 #include "AbilitySystem/Abilities/CombatHeroGameplayAbility.h"
 #include "HeroAbility_LightAttackBase.generated.h"
 
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRageStateLightAttackEndDelegate);
+
 class UAnimMontage;
+class ACombatProjectileBase;
 
 USTRUCT(BlueprintType)
 struct FLightAttackTagSet
@@ -16,15 +20,6 @@ struct FLightAttackTagSet
 public:
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag WeaponHitSoundGameplayCueTag;
-
-	UPROPERTY(EditDefaultsOnly)
-	FGameplayTag WaitMontageEventTag;
-
-	UPROPERTY(EditDefaultsOnly)
-	FGameplayTag SetByCallerAttackTypeTag;
-
-	UPROPERTY(EditDefaultsOnly)
-	FGameplayTag TargetHitReactEventTag;
 };
 
 USTRUCT(BlueprintType)
@@ -52,38 +47,33 @@ public:
 	UHeroAbility_LightAttackBase();
 
 protected:
-	UPROPERTY(EditDefaultsOnly)
-	TMap<int32, UAnimMontage*> AttackMontagesMap;
-
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	FLightAttackTagSet TagSet;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	FLightAttackEffectSet EffectSet;
 
-	UPROPERTY(VisibleAnywhere)
-	int32 CurrentAttackComboCount = 1;
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
+	TSubclassOf<ACombatProjectileBase> ProjectileClass;
 
-	UPROPERTY(VisibleAnywhere)
+private:
+	int32 CurrentAttackComboCount = 1;
 	int32 UsedAttackComboCount = 1; // For Handle Damage
 
 	// Timer
 	FTimerHandle AbilityEndTimerHandle;
 	FTimerDelegate AbilityEndTimerDelegate;
 
+	// Delegate
+	FOnRageStateLightAttackEndDelegate OnRageStateLightAttackEndDelegate;
+
 protected:
-	//~ Begin UGameplayAbility Interface ~//
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
-	//~ End UgameplayAbility Interface ~//
-	
-	void InitializeTimer(FTimerHandle& InTimerHandle);
-	void InitializeComboCount(int32& InCurrentAttackComboCount, int32& InUsedAttackComboCount);
 
-	// Set Montage Task
-	void SetPlayMontageTask(TMap<int32, UAnimMontage*>& InMontagesMap, int32& InKey);
-	UAnimMontage* FindMontageToPlay(TMap<int32, UAnimMontage*>& InMontagesMap, int32& InKey);
+	virtual UAnimMontage* FindMontageToPlay(TMap<int32, UAnimMontage*>& InAnimMontagesMap) override;
 
+private:
 	UFUNCTION()
 	void OnMontageCompleted();
 
@@ -96,18 +86,18 @@ protected:
 	UFUNCTION()
 	void OnMontageCancelled();
 
-	void SetTimer(FTimerHandle& InTimerHandle, FTimerDelegate& InTimerDelegate);
-	void OnAbilityEndTimerFinished();
-	
-	// Set Wait Montage Event Task
-	void SetWaitMontageEventTask(FGameplayTag& InEventTag);
-
 	UFUNCTION()
 	void OnEventReceived(FGameplayEventData InEventData);
 
-	void ExecuteGameplayCueOnOnwer(FGameplayTag& InGameplayCueTag) const;
-	FGameplayEffectSpecHandle MakeAttackDamageSpecHandle(FGameplayEventData& InEventData, TSubclassOf<UGameplayEffect>& InDealDamageEffectClass, FGameplayTag& InSetByCallerAttackTypeTag, int32& InUsedAttackComboCount);
-	void HandleDamage(FGameplayEventData& InEventData, FGameplayEffectSpecHandle& InGameplayEffectSpecHandle, FLightAttackTagSet& InTagSet, TSubclassOf<UGameplayEffect>& InGainRageEffectClass);
-	void UpdateCurrentAttackComboCount(int32& InCurrentAttackComboCount);
-	void ResetCurrentAttackComboCount(int32& InCurrentAttackComboCount);
+	// Timer
+	void OnAbilityEndTimerFinished();
+
+	// Delegate
+	UFUNCTION()
+	void OnRageStateAttackEnd();
+
+	UFUNCTION()
+	void OnSpawnProjectileEventReceived(FGameplayEventData InEventData);
+
+	void ResetCurrentAttackComboCount();
 };

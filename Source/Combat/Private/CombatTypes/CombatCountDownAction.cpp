@@ -41,8 +41,6 @@ void FCombatCountDownAction::UpdateOperation(FLatentResponse& Response)
 
 		ElapsedInterval = 0.f;
 	}
-
-	//Debug::Print(TEXT("Flo"));
 }
 
 void FCombatCountDownAction::CancelAction()

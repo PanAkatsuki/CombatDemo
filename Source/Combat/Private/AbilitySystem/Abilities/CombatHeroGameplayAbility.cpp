@@ -67,7 +67,7 @@ FGameplayEffectSpecHandle UCombatHeroGameplayAbility::MakeHeroDamageEffectsSpecH
     );
 
     if (InCurrentAttackTypeTag.IsValid())
-    {
+    { 
         // Set attack type tag and used combo count
         DamageEffectsSpecHandle.Data->SetSetByCallerMagnitude(
             InCurrentAttackTypeTag, 
@@ -83,7 +83,6 @@ bool UCombatHeroGameplayAbility::GetAbilityRemainingCooldownByTag(FGameplayTag I
     check(InCooldownTag.IsValid());
 
     FGameplayEffectQuery CooldownQuery = FGameplayEffectQuery::MakeQuery_MatchAnyOwningTags(InCooldownTag.GetSingleTagContainer());
-
     TArray<TPair<float, float>> TimeRemainingAndDuration = GetAbilitySystemComponentFromActorInfo()->GetActiveEffectsTimeRemainingAndDuration(CooldownQuery);
 
     if (!TimeRemainingAndDuration.IsEmpty())

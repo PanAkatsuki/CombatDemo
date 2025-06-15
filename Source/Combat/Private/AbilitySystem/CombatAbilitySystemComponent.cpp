@@ -33,15 +33,10 @@ void UCombatAbilitySystemComponent::OnAbilityInputPressed(const FGameplayTag& In
 			{
 				bool bSuccessfulActivate = TryActivateAbility(Spec.Handle);
 
-				// Debug
-				/*if (bSuccessfulActivate)
+				if (!bSuccessfulActivate)
 				{
-					Debug::Print(TEXT("Activate Successed!"));
+					//Debug::Print(TEXT("Activate Failed!"));
 				}
-				else
-				{
-					Debug::Print(TEXT("Activate Failed!"));
-				}*/
 			}
 		}
 		else

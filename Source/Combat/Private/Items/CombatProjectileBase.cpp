@@ -53,29 +53,39 @@ void ACombatProjectileBase::BeginPlay()
 	{
 		ProjectileCollisionBox->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	}
+	
+	if (SoundAndFXSet.SpawnSound)
+	{
+		check(GetWorld());
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), SoundAndFXSet.SpawnSound, GetActorLocation());
+	}
 
-	check(GetWorld());
-	check(SoundAndFXSet.SpawnSound);
-	UGameplayStatics::PlaySoundAtLocation(GetWorld(), SoundAndFXSet.SpawnSound, GetActorLocation());
+	if (SoundAndFXSet.FlyingSound)
+	{
+		FlyingSoundComponent = UGameplayStatics::SpawnSoundAttached(
+			SoundAndFXSet.FlyingSound,
+			GetRootComponent(),
+			FName(),
+			FVector::ZeroVector,
+			EAttachLocation::KeepRelativeOffset
+		);
+	}
 
-	check(SoundAndFXSet.FlyingSound);
-	FlyingSoundComponent = UGameplayStatics::SpawnSoundAttached(
-		SoundAndFXSet.FlyingSound, 
-		GetRootComponent(), 
-		FName(), 
-		FVector::ZeroVector, 
-		EAttachLocation::KeepRelativeOffset
-	);
+	if (!SoundAndFXSet.MuzzleNiagaraSystem.IsNull())
+	{
+		UAssetManager::GetStreamableManager().RequestAsyncLoad(
+			SoundAndFXSet.MuzzleNiagaraSystem.ToSoftObjectPath(),
+			FStreamableDelegate::CreateUObject(this, &ACombatProjectileBase::OnAsyncLoadMuzzleNiagaraSystemFinished)
+		);
+	}
 
-	UAssetManager::GetStreamableManager().RequestAsyncLoad(
-		SoundAndFXSet.MuzzleNiagaraSystem.ToSoftObjectPath(),
-		FStreamableDelegate::CreateUObject(this, &ACombatProjectileBase::OnAsyncLoadMuzzleNiagaraSystemFinished)
-	);
-
-	UAssetManager::GetStreamableManager().RequestAsyncLoad(
-		SoundAndFXSet.HitNiagaraSystem.ToSoftObjectPath(),
-		FStreamableDelegate::CreateUObject(this, &ACombatProjectileBase::OnAsyncLoadHitNiagaraSystemFinished)
-	);
+	if (!SoundAndFXSet.HitNiagaraSystem.IsNull())
+	{
+		UAssetManager::GetStreamableManager().RequestAsyncLoad(
+			SoundAndFXSet.HitNiagaraSystem.ToSoftObjectPath(),
+			FStreamableDelegate::CreateUObject(this, &ACombatProjectileBase::OnAsyncLoadHitNiagaraSystemFinished)
+		);
+	}
 }
 
 void ACombatProjectileBase::SetProjectileDamageEffectSpecHandle(const FGameplayEffectSpecHandle& InDamageEffectSpecHandle)
@@ -85,7 +95,7 @@ void ACombatProjectileBase::SetProjectileDamageEffectSpecHandle(const FGameplayE
 
 void ACombatProjectileBase::OnProjectileHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	//BP_OnSpawnProjectileHitFX(Hit.ImpactPoint);
+	// For Enemy
 	PlayProjectileHitFX(Hit);
 
 	APawn* HitPawn = Cast<APawn>(OtherActor);
@@ -127,9 +137,11 @@ void ACombatProjectileBase::OnProjectileHit(UPrimitiveComponent* HitComponent, A
 
 void ACombatProjectileBase::PlayProjectileHitFX(const FHitResult& Hit)
 {
-	check(GetWorld());
-	check(SoundAndFXSet.ImpactSound);
-	UGameplayStatics::PlaySoundAtLocation(GetWorld(), SoundAndFXSet.ImpactSound, Hit.Location);
+	if (SoundAndFXSet.ImpactSound)
+	{
+		check(GetWorld());
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), SoundAndFXSet.ImpactSound, Hit.Location);
+	}
 
 	if (SoundAndFXSet.HitNiagaraSystem.IsValid())
 	{
@@ -159,6 +171,7 @@ void ACombatProjectileBase::OnAsyncLoadHitNiagaraSystemFinished()
 
 void ACombatProjectileBase::OnProjectileBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	// For Hero
 	if (OverlappedActors.Contains(OtherActor))
 	{
 		return;
@@ -168,6 +181,11 @@ void ACombatProjectileBase::OnProjectileBeginOverlap(UPrimitiveComponent* Overla
 
 	if (APawn* HitPawn = Cast<APawn>(OtherActor))
 	{
+		if (!GetInstigator())
+		{
+			return;// Here need a better solution
+		}
+
 		if (UCombatFunctionLibrary::IsTargetPawnHostile(GetInstigator(), HitPawn))
 		{
 			FGameplayEventData GameplayEventData;

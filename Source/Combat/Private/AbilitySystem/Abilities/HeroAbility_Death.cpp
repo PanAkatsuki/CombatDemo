@@ -4,7 +4,6 @@
 #include "AbilitySystem/Abilities/HeroAbility_Death.h"
 
 #include "CombatGameplayTags.h"
-#include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Characters/CombatHeroCharacter.h"
 #include "Components/CapsuleComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -28,7 +27,7 @@ void UHeroAbility_Death::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	SetPlayMontageTask(MontagesMap);
+	SetPlayMontageTask(this, FName("DeathMontageTask"), FindMontageToPlay(AnimMontagesMap));
 }
 
 void UHeroAbility_Death::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
@@ -42,40 +41,14 @@ void UHeroAbility_Death::EndAbility(const FGameplayAbilitySpecHandle Handle, con
 	ACombatSurvialGameMode* SurvialGameMode = Cast<ACombatSurvialGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
 	if (SurvialGameMode)
 	{
-		//SurvialGameMode->OnSurvialGameModeStateChanged.Broadcast()
-		//todo
+		SurvialGameMode->OnSurvialGameModeStateChanged.Broadcast(ECombatSurvialGameModeState::PlayerDied);
 	}
 
-	check(GetHeroControllerFromActorInfo());
-	UWidgetBlueprintLibrary::SetInputMode_UIOnlyEx(GetHeroControllerFromActorInfo());
-	GetHeroControllerFromActorInfo()->bShowMouseCursor = false;
-}
-
-void UHeroAbility_Death::SetPlayMontageTask(TMap<int32, UAnimMontage*>& InMontagesMap)
-{
-	check(MontagesMap.Num());
-
-	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
-		this,
-		FName("PlayHeroDeathMontageTask"),
-		FindMontageToPlay(InMontagesMap),
-		1.0f
-	);
-
-	PlayMontageTask->OnCompleted.AddUniqueDynamic(this, &ThisClass::OnMontageCompleted);
-	PlayMontageTask->OnBlendOut.AddUniqueDynamic(this, &ThisClass::OnMontageBlendOut);
-	PlayMontageTask->OnInterrupted.AddUniqueDynamic(this, &ThisClass::OnMontageInterrupted);
-	PlayMontageTask->OnCancelled.AddUniqueDynamic(this, &ThisClass::OnMontageCancelled);
-
-	PlayMontageTask->ReadyForActivation();
-}
-
-UAnimMontage* UHeroAbility_Death::FindMontageToPlay(TMap<int32, UAnimMontage*>& InMontagesMap)
-{
-	int32 RandomInt = FMath::RandRange(1, InMontagesMap.Num());
-	UAnimMontage* const* MontagePtr = InMontagesMap.Find(RandomInt);
-
-	return MontagePtr ? *MontagePtr : nullptr;
+	if (ACombatHeroController* HeroController = GetHeroControllerFromActorInfo())
+	{
+		UWidgetBlueprintLibrary::SetInputMode_UIOnlyEx(GetHeroControllerFromActorInfo());
+		GetHeroControllerFromActorInfo()->bShowMouseCursor = false;
+	}
 }
 
 void UHeroAbility_Death::OnMontageCompleted()

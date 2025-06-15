@@ -8,6 +8,10 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "CombatFunctionLibrary.h"
 #include "CombatGameplayTags.h"
+#include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
+#include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
+
+#include "CombatDebugHelper.h"
 
 
 void UCombatGameplayAbility::OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec)
@@ -21,35 +25,79 @@ void UCombatGameplayAbility::EndAbility(const FGameplayAbilitySpecHandle Handle,
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 
-	ClearOnGivenAbility(Handle, ActorInfo);
+	ClearOnGivenAbility(ActorInfo, Handle);
 }
 
-void UCombatGameplayAbility::TryActivateOnGivenAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec)
+void UCombatGameplayAbility::SetPlayMontageTask(UGameplayAbility* OwningAbility, FName TaskInstanceName, UAnimMontage* MontageToPlay, float Rate, FName StartSection, bool bStopWhenAbilityEnds, float AnimRootMotionTranslationScale, float StartTimeSeconds, bool bAllowInterruptAfterBlendOut)
 {
-	if (AbilityActivationPolicy == ECombatAbilityActivationPolicy::OnGiven)
-	{
-		if (ActorInfo && !Spec.IsActive())
-		{
-			ActorInfo->AbilitySystemComponent->TryActivateAbility(Spec.Handle);
-		}
-	}
+	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
+		OwningAbility,
+		TaskInstanceName,
+		MontageToPlay,
+		Rate,
+		StartSection,
+		bStopWhenAbilityEnds,
+		AnimRootMotionTranslationScale,
+		StartTimeSeconds,
+		bAllowInterruptAfterBlendOut
+	);
+
+	PlayMontageTask->OnCompleted.AddUniqueDynamic(this, &ThisClass::OnMontageCompleted);
+	PlayMontageTask->OnBlendOut.AddUniqueDynamic(this, &ThisClass::OnMontageBlendOut);
+	PlayMontageTask->OnInterrupted.AddUniqueDynamic(this, &ThisClass::OnMontageInterrupted);
+	PlayMontageTask->OnCancelled.AddUniqueDynamic(this, &ThisClass::OnMontageCancelled);
+
+	PlayMontageTask->ReadyForActivation();
 }
 
-void UCombatGameplayAbility::ClearOnGivenAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo)
+UAnimMontage* UCombatGameplayAbility::FindMontageToPlay(TMap<int32, UAnimMontage*>& InAnimMontagesMap)
 {
-	if (AbilityActivationPolicy == ECombatAbilityActivationPolicy::OnGiven)
-	{
-		if (ActorInfo)
-		{
-			ActorInfo->AbilitySystemComponent->ClearAbility(Handle);
-		}
-	}
+	check(InAnimMontagesMap.Num());
+
+	int32 RandomInt = FMath::RandRange(1, InAnimMontagesMap.Num());
+	UAnimMontage* const* MontagePtr = InAnimMontagesMap.Find(RandomInt);
+
+	return MontagePtr ? *MontagePtr : nullptr;
+}
+
+void UCombatGameplayAbility::OnMontageCompleted()
+{
+}
+
+void UCombatGameplayAbility::OnMontageBlendOut()
+{
+}
+
+void UCombatGameplayAbility::OnMontageInterrupted()
+{
+}
+
+void UCombatGameplayAbility::OnMontageCancelled()
+{
+}
+
+void UCombatGameplayAbility::SetWaitMontageEventTask(UGameplayAbility* OwningAbility, FGameplayTag WaitEventTag, AActor* OptionalExternalTarget, bool OnlyTriggerOnce, bool OnlyMatchExact)
+{
+	UAbilityTask_WaitGameplayEvent* WaitEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
+		OwningAbility,
+		WaitEventTag,
+		OptionalExternalTarget,
+		OnlyTriggerOnce,
+		OnlyMatchExact
+	);
+
+	WaitEventTask->EventReceived.AddUniqueDynamic(this, &ThisClass::OnEventReceived);
+
+	WaitEventTask->ReadyForActivation();
+}
+
+void UCombatGameplayAbility::OnEventReceived(FGameplayEventData InEventData)
+{
 }
 
 UPawnFightComponent* UCombatGameplayAbility::GetPawnFightComponentFromActorInfo() const
 {
 	UPawnFightComponent* PawnFightComponent = GetAvatarActorFromActorInfo()->FindComponentByClass<UPawnFightComponent>();
-
 	check(PawnFightComponent);
 
 	return PawnFightComponent;
@@ -58,7 +106,6 @@ UPawnFightComponent* UCombatGameplayAbility::GetPawnFightComponentFromActorInfo(
 UCombatAbilitySystemComponent* UCombatGameplayAbility::GetCombatAbilitySystemComponentFromActorInfo() const
 {
 	UCombatAbilitySystemComponent* CombatAbilitySystemComponent = Cast<UCombatAbilitySystemComponent>(CurrentActorInfo->AbilitySystemComponent);
-
 	check(CombatAbilitySystemComponent);
 
 	return CombatAbilitySystemComponent;
@@ -67,20 +114,10 @@ UCombatAbilitySystemComponent* UCombatGameplayAbility::GetCombatAbilitySystemCom
 FActiveGameplayEffectHandle UCombatGameplayAbility::NativeApplyEffectSpecHandleToTarget(AActor* TargetActor, const FGameplayEffectSpecHandle& InSpecHandle)
 {
 	UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(TargetActor);
-
 	checkf(TargetASC, TEXT("TargetASC is not valid."));
+
 	checkf(InSpecHandle.IsValid(), TEXT("InSpecHandle is not valid."));
-
 	return GetCombatAbilitySystemComponentFromActorInfo()->ApplyGameplayEffectSpecToTarget(*InSpecHandle.Data, TargetASC);
-}
-
-FActiveGameplayEffectHandle UCombatGameplayAbility::BP_ApplyEffectSpecHandleToTarget(AActor* TargetActor, const FGameplayEffectSpecHandle& InSpecHandle, ECombatSuccessType& OutSuccessType)
-{
-	FActiveGameplayEffectHandle ActiveGameplayEffectHandle = NativeApplyEffectSpecHandleToTarget(TargetActor, InSpecHandle);
-
-	OutSuccessType = ActiveGameplayEffectHandle.WasSuccessfullyApplied() ? ECombatSuccessType::Successful : ECombatSuccessType::Failed;
-
-	return ActiveGameplayEffectHandle;
 }
 
 void UCombatGameplayAbility::ApplyGameplayEffectSpecHandleToHitResults(const FGameplayEffectSpecHandle& InSpecHandle, const TArray<FHitResult>& InHitResults)
@@ -112,3 +149,24 @@ void UCombatGameplayAbility::ApplyGameplayEffectSpecHandleToHitResults(const FGa
 	}
 }
 
+void UCombatGameplayAbility::TryActivateOnGivenAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec)
+{
+	if (AbilityActivationPolicy == ECombatAbilityActivationPolicy::OnGiven)
+	{
+		if (ActorInfo && !Spec.IsActive())
+		{
+			ActorInfo->AbilitySystemComponent->TryActivateAbility(Spec.Handle);
+		}
+	}
+}
+
+void UCombatGameplayAbility::ClearOnGivenAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpecHandle Handle)
+{
+	if (AbilityActivationPolicy == ECombatAbilityActivationPolicy::OnGiven)
+	{
+		if (ActorInfo)
+		{
+			ActorInfo->AbilitySystemComponent->ClearAbility(Handle);
+		}
+	}
+}

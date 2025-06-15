@@ -34,12 +34,12 @@ class COMBAT_API UCombatGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
 	
+public:
+	virtual void Init() override;
+
 protected:
 	virtual void OnPreLoadMap(const FString& MapName);
 	virtual void OnDestinationWorldLoaded(UWorld* LoadedWorld);
-
-public:
-	virtual void Init() override;
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)

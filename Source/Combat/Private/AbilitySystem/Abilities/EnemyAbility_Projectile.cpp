@@ -98,15 +98,15 @@ void UEnemyAbility_Projectile::SetWaitMontageEventTask(FGameplayTag& InEventTag)
 
 void UEnemyAbility_Projectile::OnEventReceived(FGameplayEventData InEventData)
 {
-	FTransform* Transform = new FTransform();
-	Transform->SetLocation(GetOwningComponentFromActorInfo()->GetSocketLocation(FName("ProjectileFireSocket")));
-	Transform->SetRotation(GetEnemyCharacterFromActorInfo()->GetActorQuat());
-	Transform->SetScale3D(FVector(1.f, 1.f, 1.f));
+	FTransform Transform;
+	Transform.SetLocation(GetOwningComponentFromActorInfo()->GetSocketLocation(FName("ProjectileFireSocket")));
+	Transform.SetRotation(GetEnemyCharacterFromActorInfo()->GetActorQuat());
+	Transform.SetScale3D(FVector(1.f, 1.f, 1.f));
 	FActorSpawnParameters ActorSpawnParameters;
 	ActorSpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 	ActorSpawnParameters.TransformScaleMethod = ESpawnActorScaleMethod::MultiplyWithRoot;
 	check(GetWorld());
-	AActor* ProjectileActor = GetWorld()->SpawnActor(ProjectileToSpawn, Transform, ActorSpawnParameters);
+	AActor* ProjectileActor = GetWorld()->SpawnActor(ProjectileToSpawn, &Transform, ActorSpawnParameters);
 
 	ACombatProjectileBase* Projectile = Cast<ACombatProjectileBase>(ProjectileActor);
 	check(Projectile);

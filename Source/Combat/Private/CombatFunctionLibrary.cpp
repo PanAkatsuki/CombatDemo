@@ -22,24 +22,23 @@ UCombatAbilitySystemComponent* UCombatFunctionLibrary::NativeGetCombatASCFromAct
 	checkf(InActor, TEXT("InActor is not valid."));
 
 	/** Tries to find an ability system component on the actor, will use AbilitySystemInterface or fall back to a component search */
-	UAbilitySystemComponent* LocalASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(InActor);
-
-	UCombatAbilitySystemComponent* CombatAbilitySystemComponent = CastChecked<UCombatAbilitySystemComponent>(LocalASC);
+	UAbilitySystemComponent* AbilitySystemComponent = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(InActor);
+	UCombatAbilitySystemComponent* CombatAbilitySystemComponent = CastChecked<UCombatAbilitySystemComponent>(AbilitySystemComponent);
 
 	return CombatAbilitySystemComponent;
 }
 
 void UCombatFunctionLibrary::AddGameplayTagToActorIfNone(AActor* InActor, FGameplayTag TagToAdd)
 {
-	// LocalASC will not be nullptr for in function UCombatFunctionLibrary::NativeGetCombatASCFromActor(AActor* InActor) there is CastChecked
-	UCombatAbilitySystemComponent* LocalASC = NativeGetCombatASCFromActor(InActor);
+	UCombatAbilitySystemComponent* CombatAbilitySystemComponent = NativeGetCombatASCFromActor(InActor);
+	check(CombatAbilitySystemComponent);
 
-	if (LocalASC->HasMatchingGameplayTag(TagToAdd))
+	if (CombatAbilitySystemComponent->HasMatchingGameplayTag(TagToAdd))
 	{
 		return;
 	}
 
-	LocalASC->AddLooseGameplayTag(TagToAdd);
+	CombatAbilitySystemComponent->AddLooseGameplayTag(TagToAdd);
 }
 
 void UCombatFunctionLibrary::RemoveGameplayTagFromActorIfFound(AActor* InActor, FGameplayTag TagToRemove)
@@ -178,7 +177,7 @@ void UCombatFunctionLibrary::CountDown(const UObject* WorldContextObject, float 
 	{
 		World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull);
 	}
-
+	
 	if (!World)
 	{
 		return;

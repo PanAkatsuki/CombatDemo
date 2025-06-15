@@ -71,13 +71,14 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
 	UProjectileMovementComponent* ProjectileMovementComponent;
 	
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
+	UAudioComponent* FlyingSoundComponent;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
 	EProtectileDamagePolicy ProtectileDamagePolicy = EProtectileDamagePolicy::OnHit;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Projectile", meta = (ExposeOnSpawn = "true"))
 	FGameplayEffectSpecHandle ProjectileDamageEffectSpecHandle;
-
-	UAudioComponent* FlyingSoundComponent;
 
 	UPROPERTY(EditDefaultsOnly)
 	FProjectileSoundAndFXSet SoundAndFXSet;
@@ -86,9 +87,11 @@ public:
 	void SetProjectileDamageEffectSpecHandle(const FGameplayEffectSpecHandle& InDamageEffectSpecHandle);
 
 protected:
+	// For Enemy
 	UFUNCTION()
 	virtual void OnProjectileHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
+	// For Hero
 	UFUNCTION()
 	virtual void OnProjectileBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 

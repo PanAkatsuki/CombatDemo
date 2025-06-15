@@ -18,18 +18,13 @@ public:
 	UHeroAbility_HitReact();
 
 protected:
-	UPROPERTY(EditDefaultsOnly)
-	TMap<int32, UAnimMontage*> MontagesMap; // Should add montages front(1), back(2), right(3), left(4)
+	// Should add montages front(1), back(2), right(3), left(4)
 
 protected:
-	//~ Begin UGameplayAbility Interface ~//
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
-	//~ End UgameplayAbility Interface ~//
 
-	void SetPlayMontageTask(TMap<int32, UAnimMontage*>& InMontagesMap, int32 InKey);
-	UFUNCTION(BlueprintPure)
-	UAnimMontage* FindMontageToPlay(TMap<int32, UAnimMontage*>& InMontagesMap, int32 InKey);
+	UAnimMontage* FindMontageWithKey(TMap<int32, UAnimMontage*>& InMontagesMap, int32 InKey);
 
 	UFUNCTION()
 	void OnMontageCompleted();

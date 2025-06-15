@@ -6,7 +6,6 @@
 #include "CombatGameplayTags.h"
 #include "CombatFunctionLibrary.h"
 #include "Characters/CombatHeroCharacter.h"
-#include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 
 #include "CombatDebugHelper.h"
 
@@ -52,7 +51,7 @@ void UHeroAbility_HitReact::ActivateAbility(const FGameplayAbilitySpecHandle Han
 	}
 
 	check(MontageKey);
-	SetPlayMontageTask(MontagesMap, MontageKey);
+	SetPlayMontageTask(this, FName("HitReactMontage"), FindMontageWithKey(AnimMontagesMap, MontageKey));
 
 	GetOwningComponentFromActorInfo()->SetScalarParameterValueOnMaterials(FName("HitFxSwitch"), 1.0f);
 }
@@ -64,27 +63,7 @@ void UHeroAbility_HitReact::EndAbility(const FGameplayAbilitySpecHandle Handle, 
 	GetOwningComponentFromActorInfo()->SetScalarParameterValueOnMaterials(FName("HitFxSwitch"), 0.0f);
 }
 
-
-void UHeroAbility_HitReact::SetPlayMontageTask(TMap<int32, UAnimMontage*>& InMontagesMap, int32 InKey)
-{
-	check(InMontagesMap.Num());
-
-	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
-		this,
-		FName("PlayHeroHitReactMontageTask"),
-		FindMontageToPlay(InMontagesMap, InKey),
-		1.0f
-	);
-
-	PlayMontageTask->OnCompleted.AddUniqueDynamic(this, &ThisClass::OnMontageCompleted);
-	PlayMontageTask->OnBlendOut.AddUniqueDynamic(this, &ThisClass::OnMontageBlendOut);
-	PlayMontageTask->OnInterrupted.AddUniqueDynamic(this, &ThisClass::OnMontageInterrupted);
-	PlayMontageTask->OnCancelled.AddUniqueDynamic(this, &ThisClass::OnMontageCancelled);
-
-	PlayMontageTask->ReadyForActivation();
-}
-
-UAnimMontage* UHeroAbility_HitReact::FindMontageToPlay(TMap<int32, UAnimMontage*>& InMontagesMap, int32 InKey)
+UAnimMontage* UHeroAbility_HitReact::FindMontageWithKey(TMap<int32, UAnimMontage*>& InMontagesMap, int32 InKey)
 {
 	UAnimMontage* const* MontagePtr = InMontagesMap.Find(InKey);
 

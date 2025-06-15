@@ -21,7 +21,6 @@ class COMBAT_API UCombatHeroGameplayAbility : public UCombatGameplayAbility
 	
 private:
 	TWeakObjectPtr<ACombatHeroCharacter> CachedCombatHeroCharacter;
-
 	TWeakObjectPtr<ACombatHeroController> CachedCombatHeroController;
 
 public:

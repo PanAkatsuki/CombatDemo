@@ -6,6 +6,14 @@
 #include "MoviePlayer.h"
 
 
+void UCombatGameInstance::Init()
+{
+	Super::Init();
+
+	FCoreUObjectDelegates::PreLoadMap.AddUObject(this, &ThisClass::OnPreLoadMap);
+	FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &ThisClass::OnDestinationWorldLoaded);
+}
+
 void UCombatGameInstance::OnPreLoadMap(const FString& MapName)
 {
 	FLoadingScreenAttributes LoadingScreenAttributes;
@@ -19,14 +27,6 @@ void UCombatGameInstance::OnPreLoadMap(const FString& MapName)
 void UCombatGameInstance::OnDestinationWorldLoaded(UWorld* LoadedWorld)
 {
 	GetMoviePlayer()->StopMovie();
-}
-
-void UCombatGameInstance::Init()
-{
-	Super::Init();
-
-	FCoreUObjectDelegates::PreLoadMap.AddUObject(this, &ThisClass::OnPreLoadMap);
-	FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &ThisClass::OnDestinationWorldLoaded);
 }
 
 TSoftObjectPtr<UWorld> UCombatGameInstance::GetGameLevelByTag(FGameplayTag InTag)

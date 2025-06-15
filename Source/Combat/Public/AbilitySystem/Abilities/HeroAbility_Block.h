@@ -13,22 +13,13 @@ struct FBlockTagSet
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	FGameplayTag ShieldGameplayCueTag;
 
-	UPROPERTY(EditDefaultsOnly)
-	FGameplayTag WaitMontageEventTag;
-
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	FGameplayTag SuccessfulBlockGameplayCueTag;
 
-	UPROPERTY(EditDefaultsOnly)
-	FGameplayTag PerfectBlockJumpToFinisherTag;
-
-	UPROPERTY(EditDefaultsOnly)
-	FGameplayTag PerfectBlockCounterAttackTag;
-
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	FGameplayTag PerfectBlockGameplayCueTag;
 };
 
@@ -44,30 +35,29 @@ public:
 	UHeroAbility_Block();
 
 protected:
-	UPROPERTY(EditDefaultsOnly)
-	UAnimMontage* MontageToPlay;
-
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	FBlockTagSet TagSet;
-
+	
+private:
 	float BlockActivateTime = 0.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability", meta = (AllowPrivateAccess = "true"))
 	float PerfectBlockThreshold = 0.2f;
+
 	bool bIsPerfectBlock = false;
 
-	FLatentActionInfo LatentInfo;
+	// LatentInfo
+	FLatentActionInfo BlockLatentInfo;
 
 	// Timer
 	FTimerHandle ResetCounterAttackTimerHandle;
 	FTimerDelegate ResetCounterAttackTimerDelegate;
 
 protected:
-	//~ Begin UGameplayAbility Interface ~//
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
-	//~ End UgameplayAbility Interface ~//
 
-	void SetPlayMontageTask(UAnimMontage* InMontageToPlay);
-
+private:
 	UFUNCTION()
 	void OnMontageCompleted();
 
@@ -80,10 +70,6 @@ protected:
 	UFUNCTION()
 	void OnMontageCancelled();
 
-	void ResetGlobalTimeDilation();
-
-	void SetWaitMontageEventTask(FGameplayTag& InWaitMontageEventTag);
-
 	UFUNCTION()
 	void OnEventReceived(FGameplayEventData InEventData);
 
@@ -91,6 +77,8 @@ protected:
 	UFUNCTION()
 	void OnDelayFinished();
 
-	void SetTimer(FTimerHandle& InTimerHandle, FTimerDelegate& InTimerDelegate);
+	// Timer
 	void OnResetCounterAttackTimerFinished();
+
+	void ResetGlobalTimeDilation();
 };

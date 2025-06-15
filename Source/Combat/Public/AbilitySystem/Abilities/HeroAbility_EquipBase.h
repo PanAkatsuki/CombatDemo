@@ -4,9 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystem/Abilities/CombatHeroGameplayAbility.h"
+
+#include "Interfaces/AttachWeaponInterface.h"
+
 #include "HeroAbility_EquipBase.generated.h"
 
 class ACombatHeroWeapon;
+class UInputMappingContext;
+struct FCombatHeroAbilitySets;
+struct FCombatHeroSpecialAbilitySet;
 
 USTRUCT(BlueprintType)
 struct FEquipTagSet
@@ -16,16 +22,13 @@ struct FEquipTagSet
 public:
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag WeaponToEquipTag;
-
-	UPROPERTY(EditDefaultsOnly)
-	FGameplayTag WaitMontageEventTag;
 };
 
 /**
  * 
  */
 UCLASS()
-class COMBAT_API UHeroAbility_EquipBase : public UCombatHeroGameplayAbility
+class COMBAT_API UHeroAbility_EquipBase : public UCombatHeroGameplayAbility, public IAttachWeaponInterface
 {
 	GENERATED_BODY()
 
@@ -33,23 +36,21 @@ public:
 	UHeroAbility_EquipBase();
 
 protected:
-	UPROPERTY(EditDefaultsOnly)
-	UAnimMontage* MontageToPlay;
-
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	FEquipTagSet TagSet;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	FName AttachSocketName;
 	
 protected:
-	//~ Begin UGameplayAbility Interface ~//
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
-	//~ End UgameplayAbility Interface ~//
 
-	void SetPlayMontageTask(UAnimMontage* InMontageToPlay);
+	//~ Begin IAttachWeaponInterface Interface ~//
+	virtual void AttachWeaponToSocket(ACombatWeaponBase* InWeapon, USkeletalMeshComponent* InSkeletalMeshComponent, FName InSocketNameToAttachTo, EAttachmentRule LocationRule, EAttachmentRule RotationRule, EAttachmentRule ScaleRule, bool WeldSimulatedBodies) override;
+	//~ End IAttachWeaponInterface Interface ~//
 
+private:
 	UFUNCTION()
 	void OnMontageCompleted();
 
@@ -62,17 +63,6 @@ protected:
 	UFUNCTION()
 	void OnMontageCancelled();
 
-	void SetWaitMontageEventTask(FGameplayTag& InWaitMontageEventTag);
-
 	UFUNCTION()
 	void OnEventReceived(FGameplayEventData InEventData);
-
-	ACombatHeroWeapon* GetCurrentEquippedWeapon();
-	void HandleEquippedWeapon();
-	void AttachWeapon(FGameplayTag& InWeaponToEquipTag, FName& InAttachSocketName);
-	void RegisterCurrentEquippedWeapon(FGameplayTag& InWeaponToRegister);
-	void LinkAnimLayer();
-	void AddMappingContext();
-	void AssignWeaponAbilitySet();
-	void UpdateUISystem();
 };

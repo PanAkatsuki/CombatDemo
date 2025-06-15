@@ -66,7 +66,7 @@ ACombatEnemyCharacter::ACombatEnemyCharacter()
 	DestroyEnemyAttributeSet.DestroyEnemyCharacterLatentInfo.CallbackTarget = this;
 	DestroyEnemyAttributeSet.DestroyEnemyCharacterLatentInfo.ExecutionFunction = FName("OnDelayForSpawnStoneEnd");
 	DestroyEnemyAttributeSet.DestroyEnemyCharacterLatentInfo.Linkage = 0;
-	DestroyEnemyAttributeSet.DestroyEnemyCharacterLatentInfo.UUID = 2;
+	DestroyEnemyAttributeSet.DestroyEnemyCharacterLatentInfo.UUID = GetTypeHash(FName("OnDelayForSpawnStoneEnd"));
 }
 
 void ACombatEnemyCharacter::PossessedBy(AController* NewController)

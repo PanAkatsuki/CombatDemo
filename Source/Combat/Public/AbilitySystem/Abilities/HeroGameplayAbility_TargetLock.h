@@ -58,11 +58,10 @@ private:
 	float CachedDefaultMaxWalkSpeed = 0.f;
 
 protected:
-	//~ Begin UGameplayAbility Interface ~//
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
-	//~ End UgameplayAbility Interface ~//
 
+private:
 	// Set Tick Task
 	void SetTickTask();
 
@@ -75,7 +74,6 @@ protected:
 	UFUNCTION()
 	void OnEventReceived(FGameplayEventData InEventData);
 
-private:
 	void TryLockOnTarget();
 	void SwitchTarget(const FGameplayTag& InSwitchDirectionTag);
 	void GetAvailableActorsToLock();

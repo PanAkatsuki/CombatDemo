@@ -16,8 +16,10 @@ void USharedAbility_SpawnWeapon::ActivateAbility(const FGameplayAbilitySpecHandl
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	SpawnWeaponAndAttachToSocket(WeaponToSpawn, SocketNameToAttachTo, WeaponTagToRigister, bRegisterAsEquippedWeapon);
-	
+	ACombatWeaponBase* Weapon = SpawnWeapon(WeaponClassToSpawn);
+	AttachWeaponToSocket(Weapon, GetOwningComponentFromActorInfo(), SocketNameToAttachTo, EAttachmentRule::SnapToTarget, EAttachmentRule::KeepRelative, EAttachmentRule::KeepWorld, true);
+	RegisterWeapon(Weapon, WeaponTagToRigister, bRegisterAsEquippedWeapon);
+
 	EndAbility(Handle, ActorInfo, ActivationInfo, false, false);
 }
 
@@ -27,8 +29,14 @@ void USharedAbility_SpawnWeapon::EndAbility(const FGameplayAbilitySpecHandle Han
 	
 }
 
-void USharedAbility_SpawnWeapon::SpawnWeaponAndAttachToSocket(TSubclassOf<ACombatWeaponBase>& InWeaponToSpawn, FName& InSocketNameToAttachTo, FGameplayTag& InWeaponTagToRigister, bool InbRegisterAsEquippedWeapon)
+void USharedAbility_SpawnWeapon::AttachWeaponToSocket(ACombatWeaponBase* InWeapon, USkeletalMeshComponent* InSkeletalMeshComponent, FName InSocketNameToAttachTo, EAttachmentRule LocationRule, EAttachmentRule RotationRule, EAttachmentRule ScaleRule, bool WeldSimulatedBodies)
 {
+	IAttachWeaponInterface::AttachWeaponToSocket(InWeapon, InSkeletalMeshComponent, InSocketNameToAttachTo, LocationRule, RotationRule, ScaleRule, WeldSimulatedBodies);
+}
+
+ACombatWeaponBase* USharedAbility_SpawnWeapon::SpawnWeapon(TSubclassOf<ACombatWeaponBase>& InWeaponToSpawn)
+{
+	// Spawn Weapon
 	check(GetWorld());
 
 	FActorSpawnParameters SpawnParams;
@@ -36,13 +44,16 @@ void USharedAbility_SpawnWeapon::SpawnWeaponAndAttachToSocket(TSubclassOf<AComba
 	SpawnParams.Instigator = Cast<APawn>(GetAvatarActorFromActorInfo());
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 	ACombatWeaponBase* SpawnedWeapon = GetWorld()->SpawnActor<ACombatWeaponBase>(InWeaponToSpawn, FVector(), FRotator(), SpawnParams);
-
 	check(SpawnedWeapon);
 
-	FAttachmentTransformRules AttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::KeepRelative, EAttachmentRule::KeepWorld, true);
-	SpawnedWeapon->AttachToComponent(GetOwningComponentFromActorInfo(), AttachmentTransformRules, InSocketNameToAttachTo);
+	return SpawnedWeapon;
+}
 
-	GetPawnFightComponentFromActorInfo()->RegisterSpawnedWeapon(InWeaponTagToRigister, SpawnedWeapon, InbRegisterAsEquippedWeapon);
 
-	SpawnedWeapon->GetWeaponMesh()->SetScalarParameterValueOnMaterials(FName("DissolveAmount"), 1.0f);
+
+void USharedAbility_SpawnWeapon::RegisterWeapon(ACombatWeaponBase* InWeapon, FGameplayTag InWeaponTagToRigister, bool InbRegisterAsEquippedWeapon)
+{
+	GetPawnFightComponentFromActorInfo()->RegisterSpawnedWeapon(InWeaponTagToRigister, InWeapon, InbRegisterAsEquippedWeapon);
+
+	InWeapon->GetWeaponMesh()->SetScalarParameterValueOnMaterials(FName("DissolveAmount"), 1.0f);
 }

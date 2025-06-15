@@ -13,25 +13,6 @@
 #include "CombatDebugHelper.h"
 
 
-void ACombatSurvialGameMode::OnEnemyDestroyed(AActor* DestroyedActor)
-{
-	CurrentSpawnedEnemiesCounter--;
-
-	//Debug::Print(FString::Printf(TEXT("CurrentSpawnedEnemiesCounter: %i, TotalSpawnedEnemiesThisWaveCounter: %i"), CurrentSpawnedEnemiesCounter, TotalSpawnedEnemiesThisWaveCounter));
-
-	if (ShouldKeepSpawnEnemies())
-	{
-		CurrentSpawnedEnemiesCounter += TrySpawnWaveEnemies();
-	}
-	else if (CurrentSpawnedEnemiesCounter == 0)
-	{
-		TotalSpawnedEnemiesThisWaveCounter = 0;
-		CurrentSpawnedEnemiesCounter = 0;
-
-		SetCurrentSurvialGameModeState(ECombatSurvialGameModeState::WaveCompleted);
-	}
-}
-
 void ACombatSurvialGameMode::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
 {
 	Super::InitGame(MapName, Options, ErrorMessage);
@@ -64,7 +45,6 @@ void ACombatSurvialGameMode::Tick(float DeltaTime)
 	if (CurrentSurvialGameModeState == ECombatSurvialGameModeState::WaitSpawnNewWave)
 	{
 		TimePassedSinceStart += DeltaTime;
-
 		if (TimePassedSinceStart >= SpawnNewWaveWaitTime)
 		{
 			TimePassedSinceStart = 0.f;
@@ -76,7 +56,6 @@ void ACombatSurvialGameMode::Tick(float DeltaTime)
 	if (CurrentSurvialGameModeState == ECombatSurvialGameModeState::SpawningNewWave)
 	{
 		TimePassedSinceStart += DeltaTime;
-
 		if (TimePassedSinceStart >= SpawnEnemiesDelayTime)
 		{
 			CurrentSpawnedEnemiesCounter += TrySpawnWaveEnemies();
@@ -90,7 +69,6 @@ void ACombatSurvialGameMode::Tick(float DeltaTime)
 	if (CurrentSurvialGameModeState == ECombatSurvialGameModeState::WaveCompleted)
 	{
 		TimePassedSinceStart += DeltaTime;
-
 		if (TimePassedSinceStart >= WaveCompletedWaitTime)
 		{
 			TimePassedSinceStart = 0.f;
@@ -106,6 +84,19 @@ void ACombatSurvialGameMode::Tick(float DeltaTime)
 				SetCurrentSurvialGameModeState(ECombatSurvialGameModeState::WaitSpawnNewWave);
 				PreLoadNextWaveEnemies();
 			}
+		}
+	}
+}
+
+void ACombatSurvialGameMode::RegisterSpawnedEnemies(const TArray<ACombatEnemyCharacter*>& InEnemiesToRegister)
+{
+	for (ACombatEnemyCharacter* SpawnedEnemy : InEnemiesToRegister)
+	{
+		if (SpawnedEnemy)
+		{
+			CurrentSpawnedEnemiesCounter++;
+
+			SpawnedEnemy->OnDestroyed.AddUniqueDynamic(this, &ThisClass::OnEnemyDestroyed);
 		}
 	}
 }
@@ -146,7 +137,6 @@ void ACombatSurvialGameMode::PreLoadNextWaveEnemies()
 					if (UClass* LoadedEnemyClass = SpawnerInfo.SoftEnemyClassToSpawn.Get())
 					{
 						PreLoadedEnemyClassMap.Emplace(SpawnerInfo.SoftEnemyClassToSpawn, LoadedEnemyClass);
-						//Debug::Print(LoadedEnemyClass->GetName());
 					}
 				}
 			)
@@ -156,12 +146,9 @@ void ACombatSurvialGameMode::PreLoadNextWaveEnemies()
 
 FCombatEnemyWaveSpawnerTableRow* ACombatSurvialGameMode::GetCurrentWaveSpawnerTableRow() const
 {
-	//EnemyWaveSpawnDataTable->FindRow<FCombatEnemyWaveSpawnerTableRow>()
 	const FName RowName = FName(TEXT("Wave") + FString::FromInt(CurrentWaveCount));
-
 	FCombatEnemyWaveSpawnerTableRow* FoundRow = EnemyWaveSpawnDataTable->FindRow<FCombatEnemyWaveSpawnerTableRow>(RowName, FString());
-
-	checkf(FoundRow, TEXT("Could not find a valid row under the	name %s in the data table"), *RowName.ToString());
+	checkf(FoundRow, TEXT("Could not find a valid row under the	name %s in the data table!"), *RowName.ToString());
 
 	return FoundRow;
 }
@@ -227,15 +214,21 @@ bool ACombatSurvialGameMode::ShouldKeepSpawnEnemies() const
 	return TotalSpawnedEnemiesThisWaveCounter < GetCurrentWaveSpawnerTableRow()->TotalEnemyToSpawnThisWave;
 }
 
-void ACombatSurvialGameMode::RegisterSpawnedEnemies(const TArray<ACombatEnemyCharacter*>& InEnemiesToRegister)
+void ACombatSurvialGameMode::OnEnemyDestroyed(AActor* DestroyedActor)
 {
-	for (ACombatEnemyCharacter* SpawnedEnemy : InEnemiesToRegister)
-	{
-		if (SpawnedEnemy)
-		{
-			CurrentSpawnedEnemiesCounter++;
+	CurrentSpawnedEnemiesCounter--;
 
-			SpawnedEnemy->OnDestroyed.AddUniqueDynamic(this, &ThisClass::OnEnemyDestroyed);
-		}
+	//Debug::Print(FString::Printf(TEXT("CurrentSpawnedEnemiesCounter: %i, TotalSpawnedEnemiesThisWaveCounter: %i"), CurrentSpawnedEnemiesCounter, TotalSpawnedEnemiesThisWaveCounter));
+
+	if (ShouldKeepSpawnEnemies())
+	{
+		CurrentSpawnedEnemiesCounter += TrySpawnWaveEnemies();
+	}
+	else if (CurrentSpawnedEnemiesCounter == 0)
+	{
+		TotalSpawnedEnemiesThisWaveCounter = 0;
+		CurrentSpawnedEnemiesCounter = 0;
+
+		SetCurrentSurvialGameModeState(ECombatSurvialGameModeState::WaveCompleted);
 	}
 }

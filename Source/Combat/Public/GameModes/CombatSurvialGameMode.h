@@ -57,22 +57,22 @@ UCLASS()
 class COMBAT_API ACombatSurvialGameMode : public ACombatBaseGameMode
 {
 	GENERATED_BODY()
-	
-private:
-	UFUNCTION()
-	void OnEnemyDestroyed(AActor* DestroyedActor);
 
 protected:
 	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 
-private:
-	UPROPERTY()
-	ECombatSurvialGameModeState CurrentSurvialGameModeState;
-
+public:
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
 	FOnSurvialGameModeStateChanged OnSurvialGameModeStateChanged;
+
+private:
+	ECombatSurvialGameModeState CurrentSurvialGameModeState;
+	int32 CurrentSpawnedEnemiesCounter = 0;
+	int32 TotalSpawnedEnemiesThisWaveCounter = 0;
+	TArray<AActor*> TargetPointsArray;
+	float TimePassedSinceStart = 0.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "WaveDefinition", meta = (AllowPrivateAccess = "true"))
 	UDataTable* EnemyWaveSpawnDataTable;
@@ -83,29 +83,21 @@ private:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "WaveDefinition", meta = (AllowPrivateAccess = "true"))
 	int32 CurrentWaveCount = 1;
 
-	UPROPERTY()
-	int32 CurrentSpawnedEnemiesCounter = 0;
-
-	UPROPERTY()
-	int32 TotalSpawnedEnemiesThisWaveCounter = 0;
-
-	UPROPERTY()
-	TArray<AActor*> TargetPointsArray;
-
-	UPROPERTY()
-	float TimePassedSinceStart = 0.f;
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "WaveDefinition", meta = (AllowPrivateAccess = "true"))
-	float SpawnNewWaveWaitTime = 5.f;
+	float SpawnNewWaveWaitTime = 2.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "WaveDefinition", meta = (AllowPrivateAccess = "true"))
 	float SpawnEnemiesDelayTime = 2.f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "WaveDefinition", meta = (AllowPrivateAccess = "true"))
-	float WaveCompletedWaitTime = 5.f;
+	float WaveCompletedWaitTime = 2.f;
 
 	UPROPERTY()
 	TMap<TSoftClassPtr<ACombatEnemyCharacter>, UClass*> PreLoadedEnemyClassMap;
+
+public:
+	UFUNCTION(BlueprintCallable)
+	void RegisterSpawnedEnemies(const TArray<ACombatEnemyCharacter*>& InEnemiesToRegister);
 
 private:
 	void SetCurrentSurvialGameModeState(ECombatSurvialGameModeState InSurvialGameModeState);
@@ -115,7 +107,6 @@ private:
 	int32 TrySpawnWaveEnemies();
 	bool ShouldKeepSpawnEnemies() const;
 
-public:
-	UFUNCTION(BlueprintCallable)
-	void RegisterSpawnedEnemies(const TArray<ACombatEnemyCharacter*>& InEnemiesToRegister);
+	UFUNCTION()
+	void OnEnemyDestroyed(AActor* DestroyedActor);
 };

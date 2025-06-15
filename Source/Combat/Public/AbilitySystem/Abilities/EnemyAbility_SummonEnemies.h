@@ -7,16 +7,6 @@
 #include "EnemyAbility_SummonEnemies.generated.h"
 
 
-//USTRUCT(BlueprintType)
-//struct FEnemySummonTagSet
-//{
-//	GENERATED_BODY()
-//
-//public:
-//	UPROPERTY(EditDefaultsOnly)
-//	FGameplayTag WaitMontageEventTag;
-//};
-
 /**
  * 
  */
@@ -30,12 +20,6 @@ public:
 
 protected:
 	UPROPERTY(EditDefaultsOnly)
-	TMap<int32, UAnimMontage*> MontagesMap;
-
-	/*UPROPERTY(EditDefaultsOnly)
-	FEnemySummonTagSet TagSet;*/
-
-	UPROPERTY(EditDefaultsOnly)
 	TSoftClassPtr<ACombatEnemyCharacter> EnemyClassToSpawn;
 
 	UPROPERTY(EditDefaultsOnly)
@@ -45,15 +29,10 @@ protected:
 	float RandomSpawnRadius = 200.f;
 
 protected:
-	//~ Begin UGameplayAbility Interface ~//
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
-	//~ End UgameplayAbility Interface ~//
 
-	// Montage task
-	void SetPlayMontageTask();
-	UAnimMontage* FindMontageToPlay();
-
+private:
 	UFUNCTION()
 	void OnMontageCompleted();
 
@@ -62,12 +41,11 @@ protected:
 
 	UFUNCTION()
 	void OnMontageInterrupted();
-
+	
 	UFUNCTION()
 	void OnMontageCancelled();
 
-	//Wait event task
-	void SetWaitSpawnEventTask();
+	void SetWaitSpawnEventTask(UGameplayAbility* OwningAbility, FGameplayTag InEventTag, TSoftClassPtr<ACombatEnemyCharacter> InSoftEnemyClassToSpawn, int32 InNumToSpawn, const FVector& InSpawnOrigin, float InRandomSpawnRadius);
 
 	UFUNCTION()
 	void OnEventReceived(const TArray<ACombatEnemyCharacter*>& SpawnedEnemies);

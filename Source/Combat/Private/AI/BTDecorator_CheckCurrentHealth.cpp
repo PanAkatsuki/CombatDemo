@@ -7,6 +7,7 @@
 #include "Characters/CombatEnemyCharacter.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
+#include "AIController.h"
 
 #include "CombatDebugHelper.h"
 
@@ -26,18 +27,18 @@ bool UBTDecorator_CheckCurrentHealth::CalculateRawConditionValue(UBehaviorTreeCo
 	float MaxHealth = 0.f;
 	float CurrentHealth = 0.f;
 
-	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OwnerComp.GetOwner());
+	UAbilitySystemComponent* ASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OwnerComp.GetAIOwner()->GetPawn());
 
 	if (ASC)
 	{
 		bool bIsMaxHealhFound = false;
 		MaxHealth = ASC->GetGameplayAttributeValue(MaxHealthAttribute, bIsMaxHealhFound);
-		Debug::Print(TEXT("MaxHealth"), MaxHealth);
+		//Debug::Print(TEXT("MaxHealth"), MaxHealth);
 		check(bIsMaxHealhFound);
 
 		bool bIsCurrentHealthFound = false;
 		CurrentHealth = ASC->GetGameplayAttributeValue(CurrentHealthAttribute, bIsCurrentHealthFound);
-		Debug::Print(TEXT("CurrentHealth"), CurrentHealth);
+		//Debug::Print(TEXT("CurrentHealth"), CurrentHealth);
 		check(bIsCurrentHealthFound)
 	}
 	else

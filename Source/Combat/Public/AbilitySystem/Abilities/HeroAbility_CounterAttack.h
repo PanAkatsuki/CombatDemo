@@ -29,25 +29,17 @@ public:
 	UHeroAbility_CounterAttack();
 
 protected:
-	UPROPERTY(EditDefaultsOnly)
-	TMap<int32, UAnimMontage*> MontagesMap;
-
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	FCounterAttackTagSet TagSet;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	TSubclassOf<UGameplayEffect> DealDamageEffectClass;
 
 protected:
-	//~ Begin UGameplayAbility Interface ~//
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
-	//~ End UgameplayAbility Interface ~//
 
-	// Set Montage Task
-	void SetPlayMontageTask();
-	UAnimMontage* FindMontageToPlay();
-
+private:
 	UFUNCTION()
 	void OnMontageCompleted();
 
@@ -60,13 +52,6 @@ protected:
 	UFUNCTION()
 	void OnMontageCancelled();
 
-	// Set Wait Event Task
-	void SetWaitMontageEventTask();
-
 	UFUNCTION()
 	void OnEventReceived(FGameplayEventData InEventData);
-
-	void ExecuteGameplayCueOnOnwer() const;
-	FGameplayEffectSpecHandle MakeAttackDamageSpecHandle();
-	void HandleDamage(FGameplayEventData& InEventData, FGameplayEffectSpecHandle& InGameplayEffectSpecHandle);
 };

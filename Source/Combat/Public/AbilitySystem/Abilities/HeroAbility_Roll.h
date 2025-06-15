@@ -20,29 +20,22 @@ public:
 	UHeroAbility_Roll();
 
 protected:
-	UPROPERTY(EditDefaultsOnly)
-	UAnimMontage* MontageToPlay;
-
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	FScalableFloat RollDistanceScalableFloat;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
 
-	FLatentActionInfo LatentInfo;
+	FLatentActionInfo RollLatentInfo;
 	
 protected:
-	//~ Begin UGameplayAbility Interface ~//
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
-	//~ End UgameplayAbility Interface ~//
 
 	UFUNCTION()
 	void OnDelayFinished();
 
 	void ComputeRollDiractionAndDistance();
-
-	void SetPlayMontageTask(UAnimMontage* InMontageToPlay);
 
 	UFUNCTION()
 	void OnMontageCompleted();

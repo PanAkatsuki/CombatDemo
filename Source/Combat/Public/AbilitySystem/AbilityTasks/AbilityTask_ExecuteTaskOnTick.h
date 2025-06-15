@@ -22,6 +22,7 @@ public:
 public:
 	UPROPERTY(BlueprintAssignable)
 	FOnAbilityTaskTickDelegate OnAbilityTaskTick;
+
 public:
 	UFUNCTION(BlueprintCallable, Category = "Combat | AbilityTasks", meta = (HidePin = "OwningAbility", DefaultToSelf = "OwningAbility", BlueprintInternalUseOnly = "true"))
 	static UAbilityTask_ExecuteTaskOnTick* ExecuteTasksOnTick(UGameplayAbility* OwningAbility);

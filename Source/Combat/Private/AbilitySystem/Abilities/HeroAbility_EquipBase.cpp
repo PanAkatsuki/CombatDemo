@@ -11,11 +11,10 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputMappingContext.h"
 #include "AbilitySystem/CombatAbilitySystemComponent.h"
-#include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
-#include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "Components/UI/HeroUIComponent.h"
 
 #include "CombatDebugHelper.h"
+
 
 UHeroAbility_EquipBase::UHeroAbility_EquipBase()
 {
@@ -26,8 +25,8 @@ void UHeroAbility_EquipBase::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	SetPlayMontageTask(MontageToPlay);
-	SetWaitMontageEventTask(TagSet.WaitMontageEventTag);
+	SetPlayMontageTask(this, FName("EquipMontageTask"), FindMontageToPlay(AnimMontagesMap));
+	SetWaitMontageEventTask(this, CombatGameplayTags::Player_Event_Equip_Axe);
 }
 
 void UHeroAbility_EquipBase::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
@@ -35,23 +34,9 @@ void UHeroAbility_EquipBase::EndAbility(const FGameplayAbilitySpecHandle Handle,
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
-void UHeroAbility_EquipBase::SetPlayMontageTask(UAnimMontage* InMontageToPlay)
+void UHeroAbility_EquipBase::AttachWeaponToSocket(ACombatWeaponBase* InWeapon, USkeletalMeshComponent* InSkeletalMeshComponent, FName InSocketNameToAttachTo, EAttachmentRule LocationRule, EAttachmentRule RotationRule, EAttachmentRule ScaleRule, bool WeldSimulatedBodies)
 {
-	check(InMontageToPlay);
-
-	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
-		this,
-		FName("PlayEquipMontageTask"),
-		InMontageToPlay,
-		1.0f
-	);
-
-	PlayMontageTask->OnCompleted.AddUniqueDynamic(this, &ThisClass::OnMontageCompleted);
-	PlayMontageTask->OnBlendOut.AddUniqueDynamic(this, &ThisClass::OnMontageBlendOut);
-	PlayMontageTask->OnInterrupted.AddUniqueDynamic(this, &ThisClass::OnMontageInterrupted);
-	PlayMontageTask->OnCancelled.AddUniqueDynamic(this, &ThisClass::OnMontageCancelled);
-
-	PlayMontageTask->ReadyForActivation();
+	IAttachWeaponInterface::AttachWeaponToSocket(InWeapon, InSkeletalMeshComponent, InSocketNameToAttachTo, LocationRule, RotationRule, ScaleRule, WeldSimulatedBodies);
 }
 
 void UHeroAbility_EquipBase::OnMontageCompleted()
@@ -78,104 +63,61 @@ void UHeroAbility_EquipBase::OnMontageCancelled()
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, true);
 }
 
-void UHeroAbility_EquipBase::SetWaitMontageEventTask(FGameplayTag& InWaitMontageEventTag)
-{
-	UAbilityTask_WaitGameplayEvent* WaitEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
-		this,
-		InWaitMontageEventTag,
-		nullptr,
-		false,
-		true
-	);
-
-	WaitEventTask->EventReceived.AddUniqueDynamic(this, &ThisClass::OnEventReceived);
-
-	WaitEventTask->ReadyForActivation();
-}
-
 void UHeroAbility_EquipBase::OnEventReceived(FGameplayEventData InEventData)
 {
-	HandleEquippedWeapon();
-}
+	ACombatHeroWeapon* Weapon = GetHeroFightComponentFromActorInfo()->GetHeroCarriedWeaponByTag(TagSet.WeaponToEquipTag);
 
-ACombatHeroWeapon* UHeroAbility_EquipBase::GetCurrentEquippedWeapon()
-{
-	UHeroFightComponent* HeroFightComponent = GetHeroFightComponentFromActorInfo();
+	// Attach
+	AttachWeaponToSocket(Weapon, GetOwningComponentFromActorInfo(), AttachSocketName, EAttachmentRule::SnapToTarget, EAttachmentRule::KeepRelative, EAttachmentRule::KeepWorld, true);
 
-	check(HeroFightComponent);
+	// Set Tag And Weapon In FightComponent
+	GetHeroFightComponentFromActorInfo()->SetCurrentEquippedWeaponAndTag(TagSet.WeaponToEquipTag, Weapon);
 
-	return HeroFightComponent->GetHeroCurrentEquippedWeapon();
-}
-
-void UHeroAbility_EquipBase::HandleEquippedWeapon()
-{
-	AttachWeapon(TagSet.WeaponToEquipTag, AttachSocketName);
-	RegisterCurrentEquippedWeapon(TagSet.WeaponToEquipTag);
-	LinkAnimLayer();
-	AddMappingContext();
-	AssignWeaponAbilitySet();
-	UpdateUISystem();
-}
-
-void UHeroAbility_EquipBase::AttachWeapon(FGameplayTag& InWeaponToEquipTag, FName& InAttachSocketName)
-{
-	ACombatHeroWeapon* Weapon = GetHeroFightComponentFromActorInfo()->GetHeroCarriedWeaponByTag(InWeaponToEquipTag);
-
-	FAttachmentTransformRules AttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::KeepRelative, EAttachmentRule::KeepWorld, true);
-	Weapon->AttachToComponent(GetOwningComponentFromActorInfo(), AttachmentTransformRules, InAttachSocketName);
-}
-
-void UHeroAbility_EquipBase::RegisterCurrentEquippedWeapon(FGameplayTag& InWeaponToRegister)
-{
-	ACombatHeroWeapon* WeaponAxe = GetHeroFightComponentFromActorInfo()->GetHeroCarriedWeaponByTag(InWeaponToRegister);
-	GetHeroFightComponentFromActorInfo()->SetCurrentEquippedWeaponAndTag(InWeaponToRegister, WeaponAxe);
-}
-
-void UHeroAbility_EquipBase::LinkAnimLayer()
-{
-	ACombatHeroWeapon* HeroWeapon = GetCurrentEquippedWeapon();
-
+	// Link Anim
 	USkeletalMeshComponent* SkeletalMeshComponent = GetOwningComponentFromActorInfo();
-
-	SkeletalMeshComponent->LinkAnimClassLayers(HeroWeapon->HeroWeaponData.WeaponAnimLayerToLink);
-}
-
-void UHeroAbility_EquipBase::AddMappingContext()
-{
-	ACombatHeroWeapon* HeroWeapon = GetCurrentEquippedWeapon();
-
-	check(HeroWeapon);
-
-	ULocalPlayer* LocalPlayer = GetHeroCharacterFromActorInfo()->GetController<APlayerController>()->GetLocalPlayer();
-
-	check(LocalPlayer);
-
-	UEnhancedInputLocalPlayerSubsystem* EnhancedInputLocalPlayerSubsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer);
-
-	check(EnhancedInputLocalPlayerSubsystem);
+	SkeletalMeshComponent->LinkAnimClassLayers(Weapon->HeroWeaponData.WeaponAnimLayerToLink);
 
 	// AddMappingContext to EnhancedInputLocalPlayerSubsystem
-	EnhancedInputLocalPlayerSubsystem->AddMappingContext(HeroWeapon->HeroWeaponData.WeaponInputMappingContext, 1);
-}
+	ULocalPlayer* LocalPlayer = GetHeroCharacterFromActorInfo()->GetController<APlayerController>()->GetLocalPlayer();
+	check(LocalPlayer);
+	UEnhancedInputLocalPlayerSubsystem* EnhancedInputLocalPlayerSubsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer);
+	check(EnhancedInputLocalPlayerSubsystem);
+	EnhancedInputLocalPlayerSubsystem->AddMappingContext(Weapon->HeroWeaponData.WeaponInputMappingContext, 1);
 
-void UHeroAbility_EquipBase::AssignWeaponAbilitySet()
-{
+	// Assign Weapon Abilities
 	UCombatAbilitySystemComponent* CombatAbilitySystemComponent = GetCombatAbilitySystemComponentFromActorInfo();
 
 	TArray<FGameplayAbilitySpecHandle> AbilitySpecHandle;
 
 	CombatAbilitySystemComponent->GrantHeroWeaponAbilities(
-		GetCurrentEquippedWeapon()->HeroWeaponData.DefaultWeaponAbilities,
-		GetCurrentEquippedWeapon()->HeroWeaponData.SpecialWeaponAbilities,
+		Weapon->HeroWeaponData.DefaultWeaponAbilities,
+		Weapon->HeroWeaponData.SpecialWeaponAbilities,
 		GetAbilityLevel(),
 		AbilitySpecHandle
 	);
 
-	GetCurrentEquippedWeapon()->AssignGrantedAbilitySpecHandles(AbilitySpecHandle);
-}
+	GetHeroFightComponentFromActorInfo()->GetHeroCurrentEquippedWeapon()->AssignGrantedAbilitySpecHandles(AbilitySpecHandle);
 
-void UHeroAbility_EquipBase::UpdateUISystem()
-{
-	ACombatHeroWeapon* HeroWeapon = GetHeroCharacterFromActorInfo()->GetHeroFightComponent()->GetHeroCurrentEquippedWeapon();
-	GetHeroCharacterFromActorInfo()->GetHeroUIComponent()->OnEquippedWeaponChanged.Broadcast(HeroWeapon->HeroWeaponData.SoftWeaponIconTexture);
+	// Set Weapon Icon
+	GetHeroCharacterFromActorInfo()->GetHeroUIComponent()->OnEquippedWeaponChanged.Broadcast(Weapon->HeroWeaponData.SoftWeaponIconTexture);
+
+	// Set Abilities Icon And Cooldown
+	for (FCombatHeroSpecialAbilitySet SpecialAbilitySet : Weapon->HeroWeaponData.SpecialWeaponAbilities)
+	{
+		GetHeroCharacterFromActorInfo()->GetHeroUIComponent()->OnAbilityIconSlotUpdated.Broadcast(
+			SpecialAbilitySet.InputTag,
+			SpecialAbilitySet.SoftAbilityIconMaterial
+		);
+
+		float TotalCooldownTime = 0.f;
+		float RemainingCooldownTime = 0.f;
+		if (GetAbilityRemainingCooldownByTag(SpecialAbilitySet.AbilityCooldownTag, TotalCooldownTime, RemainingCooldownTime))
+		{
+			GetHeroCharacterFromActorInfo()->GetHeroUIComponent()->OnAbilityCooldownBegin.Broadcast(
+				SpecialAbilitySet.InputTag,
+				TotalCooldownTime,
+				RemainingCooldownTime
+			);
+		}
+	}
 }

@@ -9,9 +9,8 @@
 #include "Characters/CombatHeroCharacter.h"
 #include "EnhancedInputSubsystems.h"
 #include "AbilitySystem/CombatAbilitySystemComponent.h"
-#include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
-#include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "Components/UI/HeroUIComponent.h"
+#include "CombatGameplayTags.h"
 
 #include "CombatDebugHelper.h"
 
@@ -25,31 +24,17 @@ void UHeroAbility_UnequipBase::ActivateAbility(const FGameplayAbilitySpecHandle 
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	SetPlayMontageTask(MontageToPlay);
-	SetWaitMontageEventTask(WaitMontageEventTag);
+	SetPlayMontageTask(this, FName("UnequipMontageTask"), FindMontageToPlay(AnimMontagesMap));
+	SetWaitMontageEventTask(this, CombatGameplayTags::Player_Event_Unequip_Axe);
 }
 void UHeroAbility_UnequipBase::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 }
 
-void UHeroAbility_UnequipBase::SetPlayMontageTask(UAnimMontage* InMontageToPlay)
+void UHeroAbility_UnequipBase::AttachWeaponToSocket(ACombatWeaponBase* InWeapon, USkeletalMeshComponent* InSkeletalMeshComponent, FName InSocketNameToAttachTo, EAttachmentRule LocationRule, EAttachmentRule RotationRule, EAttachmentRule ScaleRule, bool WeldSimulatedBodies)
 {
-	check(InMontageToPlay);
-
-	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
-		this,
-		FName("PlayUnequipMontageTask"),
-		InMontageToPlay,
-		1.0f
-	);
-
-	PlayMontageTask->OnCompleted.AddUniqueDynamic(this, &ThisClass::OnMontageCompleted);
-	PlayMontageTask->OnBlendOut.AddUniqueDynamic(this, &ThisClass::OnMontageBlendOut);
-	PlayMontageTask->OnInterrupted.AddUniqueDynamic(this, &ThisClass::OnMontageInterrupted);
-	PlayMontageTask->OnCancelled.AddUniqueDynamic(this, &ThisClass::OnMontageCancelled);
-
-	PlayMontageTask->ReadyForActivation();
+	IAttachWeaponInterface::AttachWeaponToSocket(InWeapon, InSkeletalMeshComponent, InSocketNameToAttachTo, LocationRule, RotationRule, ScaleRule, WeldSimulatedBodies);
 }
 
 void UHeroAbility_UnequipBase::OnMontageCompleted()
@@ -76,96 +61,43 @@ void UHeroAbility_UnequipBase::OnMontageCancelled()
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, true);
 }
 
-void UHeroAbility_UnequipBase::SetWaitMontageEventTask(FGameplayTag& InWaitMontageEventTag)
-{
-	UAbilityTask_WaitGameplayEvent* WaitEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
-		this,
-		InWaitMontageEventTag,
-		nullptr,
-		false,
-		true
-	);
-
-	WaitEventTask->EventReceived.AddUniqueDynamic(this, &ThisClass::OnEventReceived);
-
-	WaitEventTask->ReadyForActivation();
-}
-
 void UHeroAbility_UnequipBase::OnEventReceived(FGameplayEventData InEventData)
-{
-	HandleUnequippedWeapon();
-}
-
-void UHeroAbility_UnequipBase::HandleUnequippedWeapon()
-{
-	AttachWeapon(AttachSocketName);
-	UnlinkAnimLayer();
-	RemoveMappingContext();
-	RemoveWeaponAbilitySet();
-	UpdateUISystem();
-	DeleteRegisterInfo();// Should put at last line in UHeroAbility_UnequipBase::HandleUnequippedWeapon()
-}
-
-void UHeroAbility_UnequipBase::AttachWeapon(FName& InAttachSocketName)
 {
 	ACombatHeroWeapon* Weapon = GetHeroFightComponentFromActorInfo()->GetHeroCurrentEquippedWeapon();
 
-	FAttachmentTransformRules AttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::KeepRelative, EAttachmentRule::KeepWorld, true);
-	Weapon->AttachToComponent(GetOwningComponentFromActorInfo(), AttachmentTransformRules, InAttachSocketName);
-}
+	// Attach
+	AttachWeaponToSocket(Weapon, GetOwningComponentFromActorInfo(), AttachSocketName, EAttachmentRule::SnapToTarget, EAttachmentRule::KeepRelative, EAttachmentRule::KeepWorld, true);
 
-ACombatHeroWeapon* UHeroAbility_UnequipBase::GetCurrentEquippedWeapon()
-{
-	UHeroFightComponent* HeroFightComponent = GetHeroFightComponentFromActorInfo();
-
-	check(HeroFightComponent);
-
-	return HeroFightComponent->GetHeroCurrentEquippedWeapon();
-}
-
-void UHeroAbility_UnequipBase::UnlinkAnimLayer()
-{
-	ACombatHeroWeapon* HeroWeapon = GetCurrentEquippedWeapon();
-
+	// Unlink Anim Layers
 	USkeletalMeshComponent* SkeletalMeshComponent = GetOwningComponentFromActorInfo();
+	SkeletalMeshComponent->UnlinkAnimClassLayers(Weapon->HeroWeaponData.WeaponAnimLayerToLink);
 
-	SkeletalMeshComponent->UnlinkAnimClassLayers(HeroWeapon->HeroWeaponData.WeaponAnimLayerToLink);
-}
-
-void UHeroAbility_UnequipBase::RemoveMappingContext()
-{
-	ACombatHeroWeapon* HeroWeapon = GetCurrentEquippedWeapon();
-
-	check(HeroWeapon);
-
+	// Remove Mapping Context
 	ULocalPlayer* LocalPlayer = GetHeroCharacterFromActorInfo()->GetController<APlayerController>()->GetLocalPlayer();
-
 	check(LocalPlayer);
-
 	UEnhancedInputLocalPlayerSubsystem* EnhancedInputLocalPlayerSubsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(LocalPlayer);
-
 	check(EnhancedInputLocalPlayerSubsystem);
+	EnhancedInputLocalPlayerSubsystem->RemoveMappingContext(Weapon->HeroWeaponData.WeaponInputMappingContext);
 
-	// RemoveMappingContext to EnhancedInputLocalPlayerSubsystem
-	EnhancedInputLocalPlayerSubsystem->RemoveMappingContext(HeroWeapon->HeroWeaponData.WeaponInputMappingContext);
-}
-
-void UHeroAbility_UnequipBase::RemoveWeaponAbilitySet()
-{
-	TArray<FGameplayAbilitySpecHandle>& AbilitySpecHandles = GetCurrentEquippedWeapon()->GetGrantedAbilitySpecHandles();
+	// Remove Weapon Abilities
+	TArray<FGameplayAbilitySpecHandle>& AbilitySpecHandles = GetHeroFightComponentFromActorInfo()->GetHeroCurrentEquippedWeapon()->GetGrantedAbilitySpecHandles();
 
 	GetCombatAbilitySystemComponentFromActorInfo()->RemoveGrantHeroWeaponAbilities(
 		AbilitySpecHandles
 	);
-}
 
-void UHeroAbility_UnequipBase::UpdateUISystem()
-{
-	ACombatHeroWeapon* HeroWeapon = GetHeroCharacterFromActorInfo()->GetHeroFightComponent()->GetHeroCurrentEquippedWeapon();
+	// Set Weapon Icon
 	GetHeroCharacterFromActorInfo()->GetHeroUIComponent()->OnEquippedWeaponChanged.Broadcast(TSoftObjectPtr<UTexture2D>());
-}
 
-void UHeroAbility_UnequipBase::DeleteRegisterInfo()
-{
-	GetHeroFightComponentFromActorInfo()->SetCurrentEquippedWeaponAndTag(FGameplayTag(), nullptr);
+	// Set Abilities Icon
+	for (FCombatHeroSpecialAbilitySet SpecialAbilitySet : Weapon->HeroWeaponData.SpecialWeaponAbilities)
+	{
+		GetHeroCharacterFromActorInfo()->GetHeroUIComponent()->OnAbilityIconSlotUpdated.Broadcast(
+			SpecialAbilitySet.InputTag,
+			TSoftObjectPtr<UMaterialInterface>()
+		);
+	}
+
+	// Delete Weapon Tag And Weapon In Fight Component
+	GetHeroFightComponentFromActorInfo()->SetCurrentEquippedWeaponAndTag(FGameplayTag(), nullptr); // Should put at last line
 }

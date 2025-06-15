@@ -3,7 +3,6 @@
 
 #include "AbilitySystem/Abilities/EnemyAbility_SummonEnemies.h"
 
-#include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "AbilitySystem/AbilityTasks/AbilityTask_WaitSpawnEnemies.h"
 #include "CombatGameplayTags.h"
 #include "Characters/CombatEnemyCharacter.h"
@@ -23,41 +22,14 @@ void UEnemyAbility_SummonEnemies::ActivateAbility(const FGameplayAbilitySpecHand
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	SetPlayMontageTask();
-	SetWaitSpawnEventTask();
+	SetPlayMontageTask(this, FName("SpawnEnemyMontageTask"), FindMontageToPlay(AnimMontagesMap));
+	SetWaitSpawnEventTask(this, CombatGameplayTags::Enemy_Event_SummonEnemies, EnemyClassToSpawn, NumToSpawn, GetEnemyCharacterFromActorInfo()->GetActorLocation(), RandomSpawnRadius);
 }
 
 void UEnemyAbility_SummonEnemies::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 
-}
-
-void UEnemyAbility_SummonEnemies::SetPlayMontageTask()
-{
-	check(MontagesMap.Num());
-
-	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
-		this,
-		FName("PlaySummonMontageTask"),
-		FindMontageToPlay(),
-		1.0f
-	);
-
-	PlayMontageTask->OnCompleted.AddUniqueDynamic(this, &ThisClass::OnMontageCompleted);
-	PlayMontageTask->OnBlendOut.AddUniqueDynamic(this, &ThisClass::OnMontageBlendOut);
-	PlayMontageTask->OnInterrupted.AddUniqueDynamic(this, &ThisClass::OnMontageInterrupted);
-	PlayMontageTask->OnCancelled.AddUniqueDynamic(this, &ThisClass::OnMontageCancelled);
-
-	PlayMontageTask->ReadyForActivation();
-}
-
-UAnimMontage* UEnemyAbility_SummonEnemies::FindMontageToPlay()
-{
-	int32 RandomInt = FMath::RandRange(1, MontagesMap.Num());
-	UAnimMontage* const* MontagePtr = MontagesMap.Find(RandomInt);
-
-	return MontagePtr ? *MontagePtr : nullptr;
 }
 
 void UEnemyAbility_SummonEnemies::OnMontageCompleted()
@@ -84,15 +56,15 @@ void UEnemyAbility_SummonEnemies::OnMontageCancelled()
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, true);
 }
 
-void UEnemyAbility_SummonEnemies::SetWaitSpawnEventTask()
+void UEnemyAbility_SummonEnemies::SetWaitSpawnEventTask(UGameplayAbility* OwningAbility, FGameplayTag InEventTag, TSoftClassPtr<ACombatEnemyCharacter> InSoftEnemyClassToSpawn, int32 InNumToSpawn, const FVector& InSpawnOrigin, float InRandomSpawnRadius)
 {
 	UAbilityTask_WaitSpawnEnemies* WaitSpawnTask = UAbilityTask_WaitSpawnEnemies::WaitSpawnEnemies(
 		this,
-		CombatGameplayTags::Enemy_Event_SummonEnemies,
-		EnemyClassToSpawn,
-		NumToSpawn,
-		GetEnemyCharacterFromActorInfo()->GetActorLocation(),
-		RandomSpawnRadius
+		InEventTag,
+		InSoftEnemyClassToSpawn,
+		InNumToSpawn,
+		InSpawnOrigin,
+		InRandomSpawnRadius
 	);
 
 	WaitSpawnTask->OnSpawnFinished.AddUniqueDynamic(this, &ThisClass::OnEventReceived);
@@ -105,8 +77,9 @@ void UEnemyAbility_SummonEnemies::OnEventReceived(const TArray<ACombatEnemyChara
 	UBlackboardComponent* BlackBoard = UAIBlueprintHelperLibrary::GetBlackboard(GetEnemyCharacterFromActorInfo());
 	BlackBoard->SetValueAsBool(FName("HasSpawnedEnemies"), true);
 
-	/*check(GetWorld());
+	check(GetWorld());
 	ACombatSurvialGameMode* GameMode = Cast<ACombatSurvialGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+
 	check(GameMode);
-	GameMode->RegisterSpawnedEnemies(SpawnedEnemies);*/
+	GameMode->RegisterSpawnedEnemies(SpawnedEnemies);
 }

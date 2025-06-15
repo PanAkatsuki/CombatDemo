@@ -18,33 +18,30 @@ public:
 	UHeroAbility_HitPause();
 
 protected:
-	UFUNCTION()
-	void OnHitPauseDelayFinished();
+	
 
-protected:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+private:
+	UPROPERTY(EditAnywhere, Category = "Combat|Ability")
 	float OriginalWorldDilation = 1.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, Category = "Combat|Ability")
 	float HitPauseTimeDilation = 0.15f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	UPROPERTY(EditAnywhere, Category = "Combat|Ability")
 	float DelayDuration = 0.02f;
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UCameraShakeBase> CameraShakeClass;
 
-	FLatentActionInfo LatentInfo;
+	FLatentActionInfo HitPauseLatentActionInfo;
 
 protected:
-	//~ Begin UGameplayAbility Interface ~//
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
-	//~ End UgameplayAbility Interface ~//
 
-	UFUNCTION(BlueprintCallable)
 	void ActivateHitPauseAbility();
 
-	
+	UFUNCTION()
+	void OnHitPauseDelayFinished();
 };
 

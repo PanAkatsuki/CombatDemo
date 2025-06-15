@@ -26,7 +26,7 @@ UEnemyAbility_HitReact::UEnemyAbility_HitReact()
 	HitReactLatentInfo.CallbackTarget = this;
 	HitReactLatentInfo.ExecutionFunction = FName("OnHitReactDelayFinished");
 	HitReactLatentInfo.Linkage = 0;
-	HitReactLatentInfo.UUID = 3;
+	HitReactLatentInfo.UUID = GetTypeHash(FName("OnHitPauseDelayFinished"));
 }
 
 void UEnemyAbility_HitReact::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
@@ -103,7 +103,6 @@ void UEnemyAbility_HitReact::SetPlayMontageTask(TMap<int32, UAnimMontage*>& InMo
 UAnimMontage* UEnemyAbility_HitReact::FindMontageToPlay(TMap<int32, UAnimMontage*>& InMontagesMap)
 {
 	int32 RandomInt = FMath::RandRange(1, InMontagesMap.Num());
-
 	UAnimMontage* const* MontagePtr = InMontagesMap.Find(RandomInt);
 
 	return MontagePtr ? *MontagePtr : nullptr;

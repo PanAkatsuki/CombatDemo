@@ -16,6 +16,8 @@ class COMBAT_API UHeroGameplayAbility_PickUpStones : public UCombatHeroGameplayA
 {
 	GENERATED_BODY()
 	
+public:
+	UHeroGameplayAbility_PickUpStones();
 
 private:
 	UPROPERTY(EditDefaultsOnly)
@@ -30,7 +32,6 @@ private:
 	UPROPERTY(EditDefaultsOnly)
 	bool bDrawDebugShape = false;
 
-	UPROPERTY()
 	TArray<ACombatStoneBase*> CollectedStones;
 
 protected:
@@ -38,6 +39,18 @@ protected:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 	//~ End UgameplayAbility Interface ~//
+
+	// Set Tick Task
+	void SetTickTask();
+
+	UFUNCTION()
+	void OnTick(float DeltaTime);
+
+	// Set Wait Event Task
+	void SetWaitMontageEventTask();
+
+	UFUNCTION()
+	void OnEventReceived(FGameplayEventData InEventData);
 
 	UFUNCTION(BlueprintCallable)
 	void CollectStones();

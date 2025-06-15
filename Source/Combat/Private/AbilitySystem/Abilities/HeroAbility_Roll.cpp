@@ -3,7 +3,6 @@
 
 #include "AbilitySystem/Abilities/HeroAbility_Roll.h"
 
-#include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Characters/CombatHeroCharacter.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -17,10 +16,10 @@ UHeroAbility_Roll::UHeroAbility_Roll()
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 
 	// Set LatentInfo
-	LatentInfo.CallbackTarget = this;
-	LatentInfo.ExecutionFunction = FName("OnDelayFinished");
-	LatentInfo.Linkage = 0;
-	LatentInfo.UUID = 4;
+	RollLatentInfo.CallbackTarget = this;
+	RollLatentInfo.ExecutionFunction = FName("OnDelayFinished");
+	RollLatentInfo.Linkage = 0;
+	RollLatentInfo.UUID = GetTypeHash(FName("OnDelayFinished"));
 }
 
 void UHeroAbility_Roll::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
@@ -28,7 +27,7 @@ void UHeroAbility_Roll::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
 	check(GetWorld());
-	UKismetSystemLibrary::Delay(GetWorld(), 0.05f, LatentInfo);
+	UKismetSystemLibrary::Delay(GetWorld(), 0.05f, RollLatentInfo);
 }
 
 void UHeroAbility_Roll::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
@@ -40,7 +39,7 @@ void UHeroAbility_Roll::EndAbility(const FGameplayAbilitySpecHandle Handle, cons
 void UHeroAbility_Roll::OnDelayFinished()
 {
 	ComputeRollDiractionAndDistance();
-	SetPlayMontageTask(MontageToPlay);
+	SetPlayMontageTask(this, FName("RollMontageTask"), FindMontageToPlay(AnimMontagesMap));
 }
 
 void UHeroAbility_Roll::ComputeRollDiractionAndDistance()
@@ -89,25 +88,6 @@ void UHeroAbility_Roll::ComputeRollDiractionAndDistance()
 			FName("RollTargetLocation")
 		);
 	}
-}
-
-void UHeroAbility_Roll::SetPlayMontageTask(UAnimMontage* InMontageToPlay)
-{
-	check(InMontageToPlay);
-
-	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
-		this,
-		FName("PlayHeroRollMontageTask"),
-		InMontageToPlay,
-		1.0f
-	);
-
-	PlayMontageTask->OnCompleted.AddUniqueDynamic(this, &ThisClass::OnMontageCompleted);
-	PlayMontageTask->OnBlendOut.AddUniqueDynamic(this, &ThisClass::OnMontageBlendOut);
-	PlayMontageTask->OnInterrupted.AddUniqueDynamic(this, &ThisClass::OnMontageInterrupted);
-	PlayMontageTask->OnCancelled.AddUniqueDynamic(this, &ThisClass::OnMontageCancelled);
-
-	PlayMontageTask->ReadyForActivation();
 }
 
 void UHeroAbility_Roll::OnMontageCompleted()
