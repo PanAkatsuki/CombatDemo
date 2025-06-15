@@ -6,6 +6,7 @@ Saved
 ThirdPerson
 .vscode
 .vs
+.log
 *.VC.db
 *.opensdf
 *.opendb
