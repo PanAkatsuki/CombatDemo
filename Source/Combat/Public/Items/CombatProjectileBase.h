@@ -84,6 +84,7 @@ protected:
 	FProjectileSoundAndFXSet SoundAndFXSet;
 
 public:
+	FORCEINLINE UBoxComponent* GetCollisionBox() { return ProjectileCollisionBox; }
 	void SetProjectileDamageEffectSpecHandle(const FGameplayEffectSpecHandle& InDamageEffectSpecHandle);
 
 protected:

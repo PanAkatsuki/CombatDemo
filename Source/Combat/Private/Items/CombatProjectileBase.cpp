@@ -26,7 +26,7 @@ ACombatProjectileBase::ACombatProjectileBase()
 
 	ProjectileCollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("ProjectileCollisionBox"));
 	SetRootComponent(ProjectileCollisionBox);
-	ProjectileCollisionBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	ProjectileCollisionBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	ProjectileCollisionBox->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
 	ProjectileCollisionBox->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Block);
 	ProjectileCollisionBox->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
@@ -181,11 +181,6 @@ void ACombatProjectileBase::OnProjectileBeginOverlap(UPrimitiveComponent* Overla
 
 	if (APawn* HitPawn = Cast<APawn>(OtherActor))
 	{
-		if (!GetInstigator())
-		{
-			return;// Here need a better solution
-		}
-
 		if (UCombatFunctionLibrary::IsTargetPawnHostile(GetInstigator(), HitPawn))
 		{
 			FGameplayEventData GameplayEventData;

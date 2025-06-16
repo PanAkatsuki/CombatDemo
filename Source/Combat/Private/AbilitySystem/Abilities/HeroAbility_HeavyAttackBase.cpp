@@ -14,6 +14,7 @@
 #include "Items/Weapons/CombatHeroWeapon.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Items/CombatProjectileBase.h"
+#include "Components/BoxComponent.h"
 
 #include "CombatDebugHelper.h"
 
@@ -194,6 +195,8 @@ void UHeroAbility_HeavyAttackBase::OnSpawnProjectileEventReceived(FGameplayEvent
 		UsedAttackComboCount
 	);
 	Projectile->SetProjectileDamageEffectSpecHandle(GameplayEffectSpecHandle);
+
+	Projectile->GetCollisionBox()->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 }
 
 void UHeroAbility_HeavyAttackBase::ResetCurrentAttackComboCount()
