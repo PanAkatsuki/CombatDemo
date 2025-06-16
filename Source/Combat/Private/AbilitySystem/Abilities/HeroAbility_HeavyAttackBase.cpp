@@ -41,7 +41,7 @@ void UHeroAbility_HeavyAttackBase::ActivateAbility(const FGameplayAbilitySpecHan
 	UsedAttackComboCount = CurrentAttackComboCount;
 
 	// Set Play Montage Task
-	SetPlayMontageTask(this, FName("HeavyAttackMontageTask"), FindMontageToPlay(AnimMontagesMap));
+	SetPlayMontageTask(this, FName("HeavyAttackMontageTask"), FindMontageToPlayWithKey(AnimMontagesMap, CurrentAttackComboCount));
 	
 	// Set Wait Montage Task
 	SetWaitMontageEventTask(this, CombatGameplayTags::Shared_Event_MeleeHit);
@@ -79,9 +79,9 @@ void UHeroAbility_HeavyAttackBase::EndAbility(const FGameplayAbilitySpecHandle H
 	);
 }
 
-UAnimMontage* UHeroAbility_HeavyAttackBase::FindMontageToPlay(TMap<int32, UAnimMontage*>& InAnimMontagesMap)
+UAnimMontage* UHeroAbility_HeavyAttackBase::FindMontageToPlayWithKey(TMap<int32, UAnimMontage*>& InAnimMontagesMap, int32 InKey)
 {
-	UAnimMontage* const* MontagePtr = AnimMontagesMap.Find(CurrentAttackComboCount);
+	UAnimMontage* const* MontagePtr = AnimMontagesMap.Find(InKey);
 
 	return MontagePtr ? *MontagePtr : nullptr;
 }

@@ -31,32 +31,25 @@ class COMBAT_API UEnemyAbility_Projectile : public UCombatEnemyGameplayAbility
 public:
 	UEnemyAbility_Projectile();
 
-protected:
-	UPROPERTY(EditDefaultsOnly)
-	TMap<int32, UAnimMontage*> MontagesMap;
-
-	UPROPERTY(EditDefaultsOnly)
+private:
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	TSubclassOf<ACombatProjectileBase> ProjectileToSpawn;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	TSubclassOf<UGameplayEffect> DealDamageEffect;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	FScalableFloat ScalableFloat;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	FEnemyProjectileAttackTagSet TagSet;
 
 protected:
-	//~ Begin UGameplayAbility Interface ~//
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
-	//~ End UgameplayAbility Interface ~//
 
-	// Set Montage Task
-	void SetPlayMontageTask(TMap<int32, UAnimMontage*>& InMontagesMap);
-	UAnimMontage* FindMontageToPlay(TMap<int32, UAnimMontage*>& InMontagesMap);
-
+private:
+	// Callback Function For Play Montage Task
 	UFUNCTION()
 	void OnMontageCompleted();
 
@@ -69,9 +62,7 @@ protected:
 	UFUNCTION()
 	void OnMontageCancelled();
 
-	// Set Wait Montage Event Task
-	void SetWaitMontageEventTask(FGameplayTag& InEventTag);
-
+	// Callback Function For Wait Gameplay Tag Task
 	UFUNCTION()
 	void OnEventReceived(FGameplayEventData InEventData);
 };

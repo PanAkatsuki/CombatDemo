@@ -19,7 +19,7 @@ class COMBAT_API UHeroAbility_Roll : public UCombatHeroGameplayAbility
 public:
 	UHeroAbility_Roll();
 
-protected:
+private:
 	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	FScalableFloat RollDistanceScalableFloat;
 
@@ -32,6 +32,8 @@ protected:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
+private:
+	// Callback funtion for Delay, cus if run ComputeRollDiractionAndDistance after ActivateAbility immediately, 
 	UFUNCTION()
 	void OnDelayFinished();
 

@@ -24,8 +24,8 @@ void UEnemyAbility_MeleeAttackBase::ActivateAbility(const FGameplayAbilitySpecHa
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
 	CheckIfShouldPlayUnblockableAttackWarning();
-	SetPlayMontageTask(MontageToPlay);
-	SetWaitMontageEventTask(TagSet.WaitMontageEventTag);
+	SetPlayMontageTask(this, FName("PlayEnemyMeleeMontageTask"), FindMontageToPlayByRandom(AnimMontagesMap));
+	SetWaitMontageEventTask(this, CombatGameplayTags::Shared_Event_MeleeHit);
 }
 
 void UEnemyAbility_MeleeAttackBase::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
@@ -52,25 +52,6 @@ void UEnemyAbility_MeleeAttackBase::CheckIfShouldPlayUnblockableAttackWarning()
 	}
 }
 
-void UEnemyAbility_MeleeAttackBase::SetPlayMontageTask(UAnimMontage* InMontageToPlay)
-{
-	check(InMontageToPlay);
-
-	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
-		this,
-		FName("PlayEnemyMeleeAttackMontageTask"),
-		InMontageToPlay,
-		1.0f
-	);
-
-	PlayMontageTask->OnCompleted.AddUniqueDynamic(this, &ThisClass::OnMontageCompleted);
-	PlayMontageTask->OnBlendOut.AddUniqueDynamic(this, &ThisClass::OnMontageBlendOut);
-	PlayMontageTask->OnInterrupted.AddUniqueDynamic(this, &ThisClass::OnMontageInterrupted);
-	PlayMontageTask->OnCancelled.AddUniqueDynamic(this, &ThisClass::OnMontageCancelled);
-
-	PlayMontageTask->ReadyForActivation();
-}
-
 void UEnemyAbility_MeleeAttackBase::OnMontageCompleted()
 {
 	//Debug::Print(TEXT("MontageCompleted"));
@@ -95,50 +76,28 @@ void UEnemyAbility_MeleeAttackBase::OnMontageCancelled()
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, true);
 }
 
-void UEnemyAbility_MeleeAttackBase::SetWaitMontageEventTask(FGameplayTag& InWaitMontageEventTag)
-{
-	UAbilityTask_WaitGameplayEvent* WaitEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
-		this,
-		InWaitMontageEventTag,
-		nullptr,
-		false,
-		true
-	);
-
-	WaitEventTask->EventReceived.AddUniqueDynamic(this, &ThisClass::OnEventReceived);
-
-	WaitEventTask->ReadyForActivation();
-}
-
 void UEnemyAbility_MeleeAttackBase::OnEventReceived(FGameplayEventData InEventData)
 {
-	ExecuteGameplayCueOnOnwer(TagSet.WeaponHitSoundGameplayCueTag);
-	FGameplayEffectSpecHandle DamageEffectSpecHandle = MakeEnemyDamageEffectSpecHandle(
-		Effect,
-		InDamageScalableFloat
-	);
-	HandleDamage(InEventData, DamageEffectSpecHandle, TagSet);
-}
-
-void UEnemyAbility_MeleeAttackBase::ExecuteGameplayCueOnOnwer(FGameplayTag& InGameplayCueTag) const
-{
-	// Should make sure InGameplayCueTag is a GameplayCueTag
-
+	// Play Gameplay Cue
 	FGameplayCueParameters GameplayCueParameters;
 	GameplayCueParameters.NormalizedMagnitude = 1.f;
 	GameplayCueParameters.Location = CurrentActorInfo->AvatarActor.Get()->GetActorLocation();
 
-	CurrentActorInfo->AbilitySystemComponent->ExecuteGameplayCue(InGameplayCueTag, GameplayCueParameters);
-}
+	CurrentActorInfo->AbilitySystemComponent->ExecuteGameplayCue(TagSet.WeaponHitSoundGameplayCueTag, GameplayCueParameters);
 
-void UEnemyAbility_MeleeAttackBase::HandleDamage(FGameplayEventData& InEventData, FGameplayEffectSpecHandle& InGameplayEffectSpecHandle, FEnemyMeleeAttackTagSet& InTagSet)
-{
+	// Make Damage Effect Spec Handle
+	FGameplayEffectSpecHandle DamageEffectSpecHandle = MakeEnemyDamageEffectSpecHandle(
+		Effect,
+		InDamageScalableFloat
+	);
+
+	// Apply Damage Effect Spec To Target
 	AActor* TargetActor = const_cast<AActor*>(InEventData.Target.Get());
-	FActiveGameplayEffectHandle ActiveGameplayEffectHandle = NativeApplyEffectSpecHandleToTarget(TargetActor, InGameplayEffectSpecHandle);
+	FActiveGameplayEffectHandle ActiveGameplayEffectHandle = NativeApplyEffectSpecHandleToTarget(TargetActor, DamageEffectSpecHandle);
 
 	if (ActiveGameplayEffectHandle.WasSuccessfullyApplied())
 	{
-		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(TargetActor, InTagSet.TargetHitReactEventTag, InEventData);
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(TargetActor, TagSet.TargetHitReactEventTag, InEventData);
 	}
 	else
 	{

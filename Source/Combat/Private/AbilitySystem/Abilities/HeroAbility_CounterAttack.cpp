@@ -22,7 +22,7 @@ void UHeroAbility_CounterAttack::ActivateAbility(const FGameplayAbilitySpecHandl
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	SetPlayMontageTask(this, FName("CounterAttackMontageTask"), FindMontageToPlay(AnimMontagesMap));
+	SetPlayMontageTask(this, FName("CounterAttackMontageTask"), FindMontageToPlayByRandom(AnimMontagesMap));
 	SetWaitMontageEventTask(this, CombatGameplayTags::Player_Event_CounterAttack);
 }
 

@@ -24,8 +24,13 @@ void UEnemyAbility_DeathBase::ActivateAbility(const FGameplayAbilitySpecHandle H
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	SetPlayMontageTask();
-	ExecuteGameplayCueOnOnwer(DeathSoundGameplayCueTag);
+	SetPlayMontageTask(this, FName("DeathMontageTask"), FindMontageToPlayByRandom(AnimMontagesMap));
+
+	FGameplayCueParameters GameplayCueParameters;
+	GameplayCueParameters.NormalizedMagnitude = 1.f;
+	GameplayCueParameters.Location = CurrentActorInfo->AvatarActor.Get()->GetActorLocation();
+
+	CurrentActorInfo->AbilitySystemComponent->ExecuteGameplayCue(DeathSoundGameplayCueTag, GameplayCueParameters);
 }
 
 void UEnemyAbility_DeathBase::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
@@ -33,33 +38,6 @@ void UEnemyAbility_DeathBase::EndAbility(const FGameplayAbilitySpecHandle Handle
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 
 	GetEnemyCharacterFromActorInfo()->OnEnemyDied(DissolveNiagaraSystem);
-}
-
-void UEnemyAbility_DeathBase::SetPlayMontageTask()
-{
-	check(MontagesMap.Num());
-
-	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
-		this,
-		FName("PlayEnemyDeathMontageTask"),
-		FindMontageToPlay(),
-		1.0f
-	);
-
-	PlayMontageTask->OnCompleted.AddUniqueDynamic(this, &ThisClass::OnMontageCompleted);
-	PlayMontageTask->OnBlendOut.AddUniqueDynamic(this, &ThisClass::OnMontageBlendOut);
-	PlayMontageTask->OnInterrupted.AddUniqueDynamic(this, &ThisClass::OnMontageInterrupted);
-	PlayMontageTask->OnCancelled.AddUniqueDynamic(this, &ThisClass::OnMontageCancelled);
-
-	PlayMontageTask->ReadyForActivation();
-}
-
-UAnimMontage* UEnemyAbility_DeathBase::FindMontageToPlay()
-{
-	int32 RandomInt = FMath::RandRange(1, MontagesMap.Num());
-	UAnimMontage* const* MontagePtr = MontagesMap.Find(RandomInt);
-
-	return MontagePtr ? *MontagePtr : nullptr;
 }
 
 void UEnemyAbility_DeathBase::OnMontageCompleted()
@@ -84,15 +62,4 @@ void UEnemyAbility_DeathBase::OnMontageCancelled()
 {
 	//Debug::Print(TEXT("MontageCancelled"));
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, true);
-}
-
-void UEnemyAbility_DeathBase::ExecuteGameplayCueOnOnwer(FGameplayTag& InGameplayCueTag) const
-{
-	// Should make sure InGameplayCueTag is a GameplayCueTag
-
-	FGameplayCueParameters GameplayCueParameters;
-	GameplayCueParameters.NormalizedMagnitude = 1.f;
-	GameplayCueParameters.Location = CurrentActorInfo->AvatarActor.Get()->GetActorLocation();
-
-	CurrentActorInfo->AbilitySystemComponent->ExecuteGameplayCue(InGameplayCueTag, GameplayCueParameters);
 }

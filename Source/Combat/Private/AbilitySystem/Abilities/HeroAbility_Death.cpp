@@ -27,7 +27,7 @@ void UHeroAbility_Death::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	SetPlayMontageTask(this, FName("DeathMontageTask"), FindMontageToPlay(AnimMontagesMap));
+	SetPlayMontageTask(this, FName("DeathMontageTask"), FindMontageToPlayByRandom(AnimMontagesMap));
 }
 
 void UHeroAbility_Death::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)

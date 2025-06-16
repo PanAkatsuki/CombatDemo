@@ -39,7 +39,7 @@ void UHeroAbility_Roll::EndAbility(const FGameplayAbilitySpecHandle Handle, cons
 void UHeroAbility_Roll::OnDelayFinished()
 {
 	ComputeRollDiractionAndDistance();
-	SetPlayMontageTask(this, FName("RollMontageTask"), FindMontageToPlay(AnimMontagesMap));
+	SetPlayMontageTask(this, FName("RollMontageTask"), FindMontageToPlayByRandom(AnimMontagesMap));
 }
 
 void UHeroAbility_Roll::ComputeRollDiractionAndDistance()

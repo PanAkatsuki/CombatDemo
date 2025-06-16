@@ -12,7 +12,6 @@ struct FHeavySpecialAttackTagSet
 {
 	GENERATED_BODY()
 
-public:
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag WeaponHitSoundGameplayCueTag;
 };
@@ -22,7 +21,6 @@ struct FHeavySpecialAttackEffectSet
 {
 	GENERATED_BODY()
 
-public:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UGameplayEffect> DealDamageEffectClass;
 
@@ -41,7 +39,7 @@ class COMBAT_API UHeroAbility_SpecialHeavy : public UCombatHeroGameplayAbility
 public:
 	UHeroAbility_SpecialHeavy();
 	
-protected:
+private:
 	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	FHeavySpecialAttackTagSet TagSet;
 
@@ -55,6 +53,7 @@ protected:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
+private:
 	UFUNCTION()
 	void OnMontageCompleted();
 

@@ -24,23 +24,10 @@ private:
 	TWeakObjectPtr<ACombatHeroController> CachedCombatHeroController;
 
 public:
-	UFUNCTION(BlueprintPure, Category = "Combat|Ability")
 	ACombatHeroCharacter* GetHeroCharacterFromActorInfo();
-
-	UFUNCTION(BlueprintPure, Category = "Combat|Ability")
 	ACombatHeroController* GetHeroControllerFromActorInfo();
-
-	UFUNCTION(BlueprintPure, Category = "Combat|Ability")
 	UHeroFightComponent* GetHeroFightComponentFromActorInfo();
-
-	UFUNCTION(BlueprintPure, Category = "Combat|Ability")
 	UHeroUIComponent* GetHeroUIComponentFromActorInfo();
-
-	UFUNCTION(BlueprintPure, Category = "Combat|Ability")
 	FGameplayEffectSpecHandle MakeHeroDamageEffectsSpecHandle(TSubclassOf<UGameplayEffect> EffectClass, float InWeaponBaseDamage, FGameplayTag InCurrentAttackTypeTag, int32 InUsedComboCount);
-
-	UFUNCTION(BlueprintCallable, Category = "Combat|Ability")
 	bool GetAbilityRemainingCooldownByTag(FGameplayTag InCooldownTag, float& TotalCooldownTime, float& RemainingCooldownTime);
-
-	
 };

@@ -30,7 +30,7 @@ void UHeroAbility_Block::ActivateAbility(const FGameplayAbilitySpecHandle Handle
 	check(GetWorld());
 	BlockActivateTime = UGameplayStatics::GetTimeSeconds(GetWorld());
 
-	SetPlayMontageTask(this, FName("BlockMontageTask"), FindMontageToPlay(AnimMontagesMap));
+	SetPlayMontageTask(this, FName("BlockMontageTask"), FindMontageToPlayByRandom(AnimMontagesMap));
 
 	FGameplayCueParameters GameplayCueParameters;
 	GameplayCueParameters.TargetAttachComponent = GetOwningComponentFromActorInfo();

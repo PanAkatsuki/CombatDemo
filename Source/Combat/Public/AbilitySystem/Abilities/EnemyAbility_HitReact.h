@@ -17,37 +17,25 @@ class COMBAT_API UEnemyAbility_HitReact : public UCombatEnemyGameplayAbility
 public:
 	UEnemyAbility_HitReact();
 
-protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	TMap<int32, UAnimMontage*> MontagesMap;
-
-	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	//bool bHasHitMontagesToPlay;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+private:
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	bool bFaceToAttacker = true;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	TSubclassOf<UGameplayEffect> UnderAttackEffect;
 
 	FLatentActionInfo HitReactLatentInfo;
 
 protected:
-	//~ Begin UGameplayAbility Interface ~//
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
-	//~ End UgameplayAbility Interface ~//
 
-	UFUNCTION(BlueprintCallable)
+private:
 	void MakeEnemyFaceToAttacker(const FGameplayEventData& EventData);
 
-	UFUNCTION(BlueprintPure)
 	bool DoesAbilityHaveMontagesToPlay();
 
-	void SetPlayMontageTask(TMap<int32, UAnimMontage*>& InMontagesMap);
-	UFUNCTION(BlueprintPure)
-	UAnimMontage* FindMontageToPlay(TMap<int32, UAnimMontage*>& InMontagesMap);
-
+	// Callback Function For Play Montage Task
 	UFUNCTION()
 	void OnMontageCompleted();
 
@@ -60,6 +48,7 @@ protected:
 	UFUNCTION()
 	void OnMontageCancelled();
 
+	// Latent
 	UFUNCTION()
 	void OnHitReactDelayFinished();
 };

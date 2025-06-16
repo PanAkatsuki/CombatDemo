@@ -19,26 +19,18 @@ class COMBAT_API UEnemyAbility_DeathBase : public UCombatEnemyGameplayAbility
 public:
 	UEnemyAbility_DeathBase();
 
-protected:
-	UPROPERTY(EditDefaultsOnly)
-	TMap<int32, UAnimMontage*> MontagesMap;
-
-	UPROPERTY(EditDefaultsOnly)
+private:
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	FGameplayTag DeathSoundGameplayCueTag;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	TSoftObjectPtr<UNiagaraSystem> DissolveNiagaraSystem;
 
 protected:
-	//~ Begin UGameplayAbility Interface ~//
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
-	//~ End UgameplayAbility Interface ~//
 
-	// Set Play Montage Task
-	void SetPlayMontageTask();
-	UAnimMontage* FindMontageToPlay();
-
+private:
 	UFUNCTION()
 	void OnMontageCompleted();
 
@@ -50,7 +42,5 @@ protected:
 
 	UFUNCTION()
 	void OnMontageCancelled();
-
-	void ExecuteGameplayCueOnOnwer(FGameplayTag& InGameplayCueTag) const;
 
 };

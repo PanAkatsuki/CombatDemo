@@ -18,7 +18,7 @@ class COMBAT_API UEnemyAbility_SummonEnemies : public UCombatEnemyGameplayAbilit
 public:
 	UEnemyAbility_SummonEnemies();
 
-protected:
+private:
 	UPROPERTY(EditDefaultsOnly)
 	TSoftClassPtr<ACombatEnemyCharacter> EnemyClassToSpawn;
 
@@ -33,6 +33,7 @@ protected:
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
 private:
+	// Callback function for play montage task
 	UFUNCTION()
 	void OnMontageCompleted();
 
@@ -45,8 +46,10 @@ private:
 	UFUNCTION()
 	void OnMontageCancelled();
 
+	// Set Wait Spawn Event Task
 	void SetWaitSpawnEventTask(UGameplayAbility* OwningAbility, FGameplayTag InEventTag, TSoftClassPtr<ACombatEnemyCharacter> InSoftEnemyClassToSpawn, int32 InNumToSpawn, const FVector& InSpawnOrigin, float InRandomSpawnRadius);
 
+	// Callback function for Wait Spawn Event Task
 	UFUNCTION()
 	void OnEventReceived(const TArray<ACombatEnemyCharacter*>& SpawnedEnemies);
 };

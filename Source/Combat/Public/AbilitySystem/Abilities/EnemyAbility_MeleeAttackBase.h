@@ -16,7 +16,6 @@ struct FEnemyMeleeAttackTagSet
 {
 	GENERATED_BODY()
 
-public:
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag UnBlockableWarningGameplayCueTag;
 
@@ -41,36 +40,30 @@ class COMBAT_API UEnemyAbility_MeleeAttackBase : public UCombatEnemyGameplayAbil
 public:
 	UEnemyAbility_MeleeAttackBase();
 
-protected:
-	UPROPERTY(EditDefaultsOnly)
-	UAnimMontage* MontageToPlay;
-
-	UPROPERTY(EditDefaultsOnly)
+private:
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	FScalableFloat InDamageScalableFloat;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	EToggleDamageType AttackType;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	float UnblockableAttackWarningSpawnOffset = 100.f;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	FEnemyMeleeAttackTagSet TagSet; 
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	TSubclassOf<UGameplayEffect> Effect;
 
 protected:
-	//~ Begin UGameplayAbility Interface ~//
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
-	//~ End UgameplayAbility Interface ~//
 
+private:
 	void CheckIfShouldPlayUnblockableAttackWarning();
 
-	// Montage task
-	void SetPlayMontageTask(UAnimMontage* InMontageToPlay);
-
+	// Callback Function For Play Montage Task 
 	UFUNCTION()
 	void OnMontageCompleted();
 
@@ -83,12 +76,8 @@ protected:
 	UFUNCTION()
 	void OnMontageCancelled();
 
-	//Wait event task
-	void SetWaitMontageEventTask(FGameplayTag& InWaitMontageEventTag);
-
+	// Callback Function For Wait Event Task
 	UFUNCTION()
 	void OnEventReceived(FGameplayEventData InEventData);
 
-	void ExecuteGameplayCueOnOnwer(FGameplayTag& InGameplayCueTag) const;
-	void HandleDamage(FGameplayEventData& InEventData, FGameplayEffectSpecHandle& InGameplayEffectSpecHandle, FEnemyMeleeAttackTagSet& InTagSet);
 };

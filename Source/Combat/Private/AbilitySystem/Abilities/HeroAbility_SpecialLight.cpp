@@ -21,7 +21,7 @@ void UHeroAbility_SpecialLight::ActivateAbility(const FGameplayAbilitySpecHandle
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	SetPlayMontageTask(this, FName("SpecialLightMontageTask"), FindMontageToPlay(AnimMontagesMap));
+	SetPlayMontageTask(this, FName("SpecialLightMontageTask"), FindMontageToPlayByRandom(AnimMontagesMap));
 	SetWaitMontageEventTask(this, CombatGameplayTags::Player_Event_SpecialAbilityAttack);
 
 	CommitAbility(Handle, ActorInfo, ActivationInfo);

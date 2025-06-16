@@ -16,7 +16,6 @@ struct FHeavyAttackTagSet
 {
 	GENERATED_BODY()
 
-public:
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag WeaponHitSoundGameplayCueTag;
 };
@@ -26,7 +25,6 @@ struct FHeavyAttackEffectSet
 {
 	GENERATED_BODY()
 
-public:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UGameplayEffect> DealDamageEffectClass;
 
@@ -45,7 +43,7 @@ class COMBAT_API UHeroAbility_HeavyAttackBase : public UCombatHeroGameplayAbilit
 public:
 	UHeroAbility_HeavyAttackBase();
 
-protected:
+private:
 	UPROPERTY(EditDefaultsOnly)
 	FHeavyAttackTagSet TagSet;
 
@@ -55,7 +53,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<ACombatProjectileBase> ProjectileClass;
 
-private:
 	int32 CurrentAttackComboCount = 1;
 	int32 UsedAttackComboCount = 1; // For Handle Damage
 
@@ -70,9 +67,10 @@ protected:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
-	virtual UAnimMontage* FindMontageToPlay(TMap<int32, UAnimMontage*>& InAnimMontagesMap) override;
-
 private:
+	UAnimMontage* FindMontageToPlayWithKey(TMap<int32, UAnimMontage*>& InAnimMontagesMap, int32 InKey);
+
+	// Callback function for play montage task
 	UFUNCTION()
 	void OnMontageCompleted();
 
@@ -85,19 +83,18 @@ private:
 	UFUNCTION()
 	void OnMontageCancelled();
 
+	//Callback function for wait event task
 	UFUNCTION()
 	void OnEventReceived(FGameplayEventData InEventData);
 
-	void ExecuteGameplayCueOnOnwer(FGameplayTag& InGameplayCueTag) const;
-	void HandleDamage(FGameplayEventData& InEventData, FGameplayEffectSpecHandle& InGameplayEffectSpecHandle);
-
-	// Timer
+	// Callback function for Timer
 	void OnAbilityEndTimerFinished();
 
-	// Delegate
+	// Callback function for OnRageStateHeavyAttackEndDelegate
 	UFUNCTION()
 	void OnRageStateAttackEnd();
 
+	// Callback funtion for OnRageStateHeavyAttackEndDelegate
 	UFUNCTION()
 	void OnSpawnProjectileEventReceived(FGameplayEventData InEventData);
 

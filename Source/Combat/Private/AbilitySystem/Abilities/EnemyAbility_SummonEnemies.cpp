@@ -22,7 +22,7 @@ void UEnemyAbility_SummonEnemies::ActivateAbility(const FGameplayAbilitySpecHand
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	SetPlayMontageTask(this, FName("SpawnEnemyMontageTask"), FindMontageToPlay(AnimMontagesMap));
+	SetPlayMontageTask(this, FName("SpawnEnemyMontageTask"), FindMontageToPlayByRandom(AnimMontagesMap));
 	SetWaitSpawnEventTask(this, CombatGameplayTags::Enemy_Event_SummonEnemies, EnemyClassToSpawn, NumToSpawn, GetEnemyCharacterFromActorInfo()->GetActorLocation(), RandomSpawnRadius);
 }
 

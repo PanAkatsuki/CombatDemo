@@ -46,7 +46,7 @@ void UHeroAbility_LightAttackBase::ActivateAbility(const FGameplayAbilitySpecHan
 	UsedAttackComboCount = CurrentAttackComboCount;
 
 	// Set Play Montage Task
-	SetPlayMontageTask(this, FName("LightAttackMontageTask"), FindMontageToPlay(AnimMontagesMap));
+	SetPlayMontageTask(this, FName("LightAttackMontageTask"), FindMontageToPlayWithKey(AnimMontagesMap, CurrentAttackComboCount));
 
 	// Set Wait Event Task
 	SetWaitMontageEventTask(this, CombatGameplayTags::Shared_Event_MeleeHit);
@@ -96,7 +96,7 @@ void UHeroAbility_LightAttackBase::EndAbility(const FGameplayAbilitySpecHandle H
 	);
 }
 
-UAnimMontage* UHeroAbility_LightAttackBase::FindMontageToPlay(TMap<int32, UAnimMontage*>& InAnimMontagesMap)
+UAnimMontage* UHeroAbility_LightAttackBase::FindMontageToPlayWithKey(TMap<int32, UAnimMontage*>& InAnimMontagesMap, int32 InKey)
 {
 	UAnimMontage* const* MontagePtr = AnimMontagesMap.Find(CurrentAttackComboCount);
 

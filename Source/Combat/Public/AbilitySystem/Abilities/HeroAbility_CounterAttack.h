@@ -12,7 +12,6 @@ struct FCounterAttackTagSet
 {
 	GENERATED_BODY()
 
-public:
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag WeaponHitSoundGameplayCueTag;
 };

@@ -16,10 +16,7 @@ class COMBAT_API UHeroAbility_HitPause : public UCombatHeroGameplayAbility
 	
 public:
 	UHeroAbility_HitPause();
-
-protected:
 	
-
 private:
 	UPROPERTY(EditAnywhere, Category = "Combat|Ability")
 	float OriginalWorldDilation = 1.f;
@@ -30,7 +27,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Combat|Ability")
 	float DelayDuration = 0.02f;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Category = "Combat|Ability")
 	TSubclassOf<UCameraShakeBase> CameraShakeClass;
 
 	FLatentActionInfo HitPauseLatentActionInfo;
@@ -39,8 +36,10 @@ protected:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
+private:
 	void ActivateHitPauseAbility();
 
+	// Callback funtion for lantend
 	UFUNCTION()
 	void OnHitPauseDelayFinished();
 };

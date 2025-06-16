@@ -19,7 +19,6 @@ struct FEquipTagSet
 {
 	GENERATED_BODY()
 
-public:
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag WeaponToEquipTag;
 };
@@ -35,7 +34,7 @@ class COMBAT_API UHeroAbility_EquipBase : public UCombatHeroGameplayAbility, pub
 public:
 	UHeroAbility_EquipBase();
 
-protected:
+private:
 	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	FEquipTagSet TagSet;
 

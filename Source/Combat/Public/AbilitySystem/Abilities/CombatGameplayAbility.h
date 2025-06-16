@@ -42,9 +42,12 @@ protected:
 
 	// Set Play Montage Task
 	void SetPlayMontageTask(UGameplayAbility* OwningAbility, FName TaskInstanceName, UAnimMontage* MontageToPlay, float Rate = 1.0f, FName StartSection = NAME_None, bool bStopWhenAbilityEnds = true, float AnimRootMotionTranslationScale = 1.0f, float StartTimeSeconds = 0.0f, bool bAllowInterruptAfterBlendOut = false);
-	virtual UAnimMontage* FindMontageToPlay(TMap<int32, UAnimMontage*>& InAnimMontagesMap);
+	virtual UAnimMontage* FindMontageToPlayByRandom(TMap<int32, UAnimMontage*>& InAnimMontagesMap);
 
 private:
+	// Callback function fro Play Montage Task
+	// In this class, these function should be empty
+	// If ability class call function SetPlayMontageTask, complete these function in child class
 	void OnMontageCompleted();
 	void OnMontageBlendOut();
 	void OnMontageInterrupted();
@@ -55,12 +58,13 @@ protected:
 	void SetWaitMontageEventTask(UGameplayAbility* OwningAbility, FGameplayTag WaitEventTag, AActor* OptionalExternalTarget = nullptr, bool OnlyTriggerOnce = false, bool OnlyMatchExact = true);
 
 private:
+	// Callback function fro wait event task
+	// In this class, this function should be empty
+	// If ability class call function SetWaitMontageEventTask, complete OnEventReceived function in child class
 	void OnEventReceived(FGameplayEventData InEventData);
 
 protected:
-	UFUNCTION(BlueprintPure, Category = "Combat|Ability")
 	UPawnFightComponent* GetPawnFightComponentFromActorInfo() const;
-
 	UCombatAbilitySystemComponent* GetCombatAbilitySystemComponentFromActorInfo() const;
 	FActiveGameplayEffectHandle NativeApplyEffectSpecHandleToTarget(AActor* TargetActor, const FGameplayEffectSpecHandle& InSpecHandle);
 	void ApplyGameplayEffectSpecHandleToHitResults(const FGameplayEffectSpecHandle& InSpecHandle, const TArray<FHitResult>& InHitResults);

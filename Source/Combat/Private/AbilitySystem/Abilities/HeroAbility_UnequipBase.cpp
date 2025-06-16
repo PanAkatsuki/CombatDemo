@@ -24,7 +24,7 @@ void UHeroAbility_UnequipBase::ActivateAbility(const FGameplayAbilitySpecHandle 
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	SetPlayMontageTask(this, FName("UnequipMontageTask"), FindMontageToPlay(AnimMontagesMap));
+	SetPlayMontageTask(this, FName("UnequipMontageTask"), FindMontageToPlayByRandom(AnimMontagesMap));
 	SetWaitMontageEventTask(this, CombatGameplayTags::Player_Event_Unequip_Axe);
 }
 void UHeroAbility_UnequipBase::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)

@@ -22,7 +22,7 @@ void UHeroAbility_Rage::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 
 	UCombatFunctionLibrary::AddGameplayTagToActorIfNone(GetHeroCharacterFromActorInfo(), CombatGameplayTags::Player_Status_Rage_Activating);
 
-	SetPlayMontageTask(this, FName("RageMontageTask"), FindMontageToPlay(AnimMontagesMap));
+	SetPlayMontageTask(this, FName("RageMontageTask"), FindMontageToPlayByRandom(AnimMontagesMap));
 	SetWaitMontageEventTask(this, CombatGameplayTags::Player_Event_ActivateRage);
 
 	// Wait Tag Added Task

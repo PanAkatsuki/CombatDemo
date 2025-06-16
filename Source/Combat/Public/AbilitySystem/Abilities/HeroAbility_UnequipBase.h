@@ -22,7 +22,7 @@ class COMBAT_API UHeroAbility_UnequipBase : public UCombatHeroGameplayAbility, p
 public:
 	UHeroAbility_UnequipBase();
 
-protected:
+private:
 	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	FName AttachSocketName;
 

@@ -7,6 +7,7 @@
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
 #include "Characters/CombatEnemyCharacter.h"
 #include "Items/CombatProjectileBase.h"
+#include "CombatGameplayTags.h"
 
 #include "CombatDebugHelper.h"
 
@@ -20,41 +21,14 @@ void UEnemyAbility_Projectile::ActivateAbility(const FGameplayAbilitySpecHandle 
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	SetPlayMontageTask(MontagesMap);
-	SetWaitMontageEventTask(TagSet.WaitMontageEventTag);
+	SetPlayMontageTask(this, FName("PlayProjectileMontageTask"), FindMontageToPlayByRandom(AnimMontagesMap));
+	SetWaitMontageEventTask(this, CombatGameplayTags::Shared_Event_SpawnProjectile);
 }
 
 void UEnemyAbility_Projectile::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
 {
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 
-}
-
-void UEnemyAbility_Projectile::SetPlayMontageTask(TMap<int32, UAnimMontage*>& InMontagesMap)
-{
-	check(InMontagesMap.Num());
-
-	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
-		this,
-		FName("PlayProjectileAttackMontageTask"),
-		FindMontageToPlay(InMontagesMap),
-		1.0f
-	);
-
-	PlayMontageTask->OnCompleted.AddUniqueDynamic(this, &ThisClass::OnMontageCompleted);
-	PlayMontageTask->OnBlendOut.AddUniqueDynamic(this, &ThisClass::OnMontageBlendOut);
-	PlayMontageTask->OnInterrupted.AddUniqueDynamic(this, &ThisClass::OnMontageInterrupted);
-	PlayMontageTask->OnCancelled.AddUniqueDynamic(this, &ThisClass::OnMontageCancelled);
-
-	PlayMontageTask->ReadyForActivation();
-}
-
-UAnimMontage* UEnemyAbility_Projectile::FindMontageToPlay(TMap<int32, UAnimMontage*>& InMontagesMap)
-{
-	int32 RandomInt = FMath::RandRange(1, InMontagesMap.Num());
-	UAnimMontage* const* MontagePtr = InMontagesMap.Find(RandomInt);
-
-	return MontagePtr ? *MontagePtr : nullptr;
 }
 
 void UEnemyAbility_Projectile::OnMontageCompleted()
@@ -79,21 +53,6 @@ void UEnemyAbility_Projectile::OnMontageCancelled()
 {
 	//Debug::Print(TEXT("MontageCancelled"));
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, true);
-}
-
-void UEnemyAbility_Projectile::SetWaitMontageEventTask(FGameplayTag& InEventTag)
-{
-	UAbilityTask_WaitGameplayEvent* WaitEventTask = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
-		this,
-		InEventTag,
-		nullptr,
-		false,
-		true
-	);
-
-	WaitEventTask->EventReceived.AddUniqueDynamic(this, &ThisClass::OnEventReceived);
-
-	WaitEventTask->ReadyForActivation();
 }
 
 void UEnemyAbility_Projectile::OnEventReceived(FGameplayEventData InEventData)

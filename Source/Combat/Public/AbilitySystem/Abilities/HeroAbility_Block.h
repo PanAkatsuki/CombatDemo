@@ -12,7 +12,6 @@ struct FBlockTagSet
 {
 	GENERATED_BODY()
 
-public:
 	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	FGameplayTag ShieldGameplayCueTag;
 
@@ -34,16 +33,14 @@ class COMBAT_API UHeroAbility_Block : public UCombatHeroGameplayAbility
 public:
 	UHeroAbility_Block();
 
-protected:
+private:
 	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	FBlockTagSet TagSet;
 	
-private:
-	float BlockActivateTime = 0.f;
-
 	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability", meta = (AllowPrivateAccess = "true"))
 	float PerfectBlockThreshold = 0.2f;
 
+	float BlockActivateTime = 0.f;
 	bool bIsPerfectBlock = false;
 
 	// LatentInfo
@@ -58,6 +55,7 @@ protected:
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
 private:
+	// Callback funciton for play montage task
 	UFUNCTION()
 	void OnMontageCompleted();
 
@@ -70,14 +68,15 @@ private:
 	UFUNCTION()
 	void OnMontageCancelled();
 
+	// Callback funciton for wait event task
 	UFUNCTION()
 	void OnEventReceived(FGameplayEventData InEventData);
 
-	// LantenInfo
+	// Callback function for LantenInfo
 	UFUNCTION()
 	void OnDelayFinished();
 
-	// Timer
+	// Callback function for Timer
 	void OnResetCounterAttackTimerFinished();
 
 	void ResetGlobalTimeDilation();

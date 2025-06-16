@@ -20,18 +20,16 @@ class COMBAT_API UBossAbility_DrawBossBar : public UCombatEnemyGameplayAbility
 public:
 	UBossAbility_DrawBossBar();
 
-protected:
-	UPROPERTY(EditDefaultsOnly)
+private:
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	TSubclassOf<UCombatWidgetBase> HealthBarWidgetClass;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	FText BossName;
 
 	UCombatWidgetBase* HealthBarWidget;
 
 protected:
-	//~ Begin UGameplayAbility Interface ~//
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
-	//~ End UgameplayAbility Interface ~//
 };

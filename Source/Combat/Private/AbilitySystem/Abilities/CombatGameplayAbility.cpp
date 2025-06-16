@@ -50,7 +50,7 @@ void UCombatGameplayAbility::SetPlayMontageTask(UGameplayAbility* OwningAbility,
 	PlayMontageTask->ReadyForActivation();
 }
 
-UAnimMontage* UCombatGameplayAbility::FindMontageToPlay(TMap<int32, UAnimMontage*>& InAnimMontagesMap)
+UAnimMontage* UCombatGameplayAbility::FindMontageToPlayByRandom(TMap<int32, UAnimMontage*>& InAnimMontagesMap)
 {
 	check(InAnimMontagesMap.Num());
 

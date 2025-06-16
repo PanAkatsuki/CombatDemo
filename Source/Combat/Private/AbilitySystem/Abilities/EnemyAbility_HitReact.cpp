@@ -6,7 +6,6 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Characters/CombatEnemyCharacter.h"
 #include "CombatGameplayTags.h"
-#include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "Kismet/KismetSystemLibrary.h"
 
 #include "CombatDebugHelper.h"
@@ -37,7 +36,7 @@ void UEnemyAbility_HitReact::ActivateAbility(const FGameplayAbilitySpecHandle Ha
 
 	if (DoesAbilityHaveMontagesToPlay())
 	{
-		SetPlayMontageTask(MontagesMap);
+		SetPlayMontageTask(this, FName("PlayEnemyHitReactMontageTask"), FindMontageToPlayByRandom(AnimMontagesMap));
 		GetOwningComponentFromActorInfo()->SetScalarParameterValueOnMaterials(FName("HitFxSwitch"), 1.0f);
 	}
 	else
@@ -78,34 +77,7 @@ void UEnemyAbility_HitReact::MakeEnemyFaceToAttacker(const FGameplayEventData& E
 
 bool UEnemyAbility_HitReact::DoesAbilityHaveMontagesToPlay()
 {
-	return MontagesMap.Num() > 0 ? true : false;
-}
-
-void UEnemyAbility_HitReact::SetPlayMontageTask(TMap<int32, UAnimMontage*>& InMontagesMap)
-{
-	check(InMontagesMap.Num());
-
-	UAbilityTask_PlayMontageAndWait* PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(
-		this,
-		FName("PlayEnemyHitReactMontageTask"),
-		FindMontageToPlay(InMontagesMap),
-		1.0f
-	);
-
-	PlayMontageTask->OnCompleted.AddUniqueDynamic(this, &ThisClass::OnMontageCompleted);
-	PlayMontageTask->OnBlendOut.AddUniqueDynamic(this, &ThisClass::OnMontageBlendOut);
-	PlayMontageTask->OnInterrupted.AddUniqueDynamic(this, &ThisClass::OnMontageInterrupted);
-	PlayMontageTask->OnCancelled.AddUniqueDynamic(this, &ThisClass::OnMontageCancelled);
-
-	PlayMontageTask->ReadyForActivation();
-}
-
-UAnimMontage* UEnemyAbility_HitReact::FindMontageToPlay(TMap<int32, UAnimMontage*>& InMontagesMap)
-{
-	int32 RandomInt = FMath::RandRange(1, InMontagesMap.Num());
-	UAnimMontage* const* MontagePtr = InMontagesMap.Find(RandomInt);
-
-	return MontagePtr ? *MontagePtr : nullptr;
+	return AnimMontagesMap.Num() > 0 ? true : false;
 }
 
 void UEnemyAbility_HitReact::OnMontageCompleted()

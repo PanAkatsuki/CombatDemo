@@ -17,7 +17,7 @@ class COMBAT_API UHeroAbility_DrawOverlayWidget : public UCombatHeroGameplayAbil
 public:
 	UHeroAbility_DrawOverlayWidget();
 
-protected:
+private:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UUserWidget> WidgetClass;
 

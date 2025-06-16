@@ -22,7 +22,7 @@ class COMBAT_API USharedAbility_SpawnWeapon : public UCombatGameplayAbility, pub
 public:
 	USharedAbility_SpawnWeapon();
 
-protected:
+private:
 	UPROPERTY(EditDefaultsOnly, Category = "SpawnWeapon")
 	TSubclassOf<ACombatWeaponBase> WeaponClassToSpawn;
 

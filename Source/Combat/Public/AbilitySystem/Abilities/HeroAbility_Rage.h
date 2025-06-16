@@ -12,7 +12,6 @@ struct FRageTagSet
 {
 	GENERATED_BODY()
 
-public:
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag RageGameplayCueTag;
 };
@@ -28,7 +27,7 @@ class COMBAT_API UHeroAbility_Rage : public UCombatHeroGameplayAbility
 public:
 	UHeroAbility_Rage();
 
-protected:
+private:
 	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	FRageTagSet TagSet;
 
@@ -42,6 +41,8 @@ protected:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
+private:
+	// Callback funtion for play montage task
 	UFUNCTION()
 	void OnMontageCompleted();
 
@@ -54,12 +55,11 @@ protected:
 	UFUNCTION()
 	void OnMontageCancelled();
 
+	// Callback funtion for wait event task
 	UFUNCTION()
 	void OnEventReceived(FGameplayEventData InEventData);
 
-	// Set Wait Tag Add
-	void SetWaitGameplayTagAdd();
-
+	// Callback funtion for Wait Tag Added Task
 	UFUNCTION()
 	void OnTagAdded();
 };

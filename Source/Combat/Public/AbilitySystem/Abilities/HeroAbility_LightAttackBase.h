@@ -17,7 +17,6 @@ struct FLightAttackTagSet
 {
 	GENERATED_BODY()
 
-public:
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag WeaponHitSoundGameplayCueTag;
 };
@@ -27,7 +26,6 @@ struct FLightAttackEffectSet
 {
 	GENERATED_BODY()
 
-public:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UGameplayEffect> DealDamageEffectClass;
 
@@ -46,7 +44,7 @@ class COMBAT_API UHeroAbility_LightAttackBase : public UCombatHeroGameplayAbilit
 public:
 	UHeroAbility_LightAttackBase();
 
-protected:
+private:
 	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	FLightAttackTagSet TagSet;
 
@@ -56,7 +54,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	TSubclassOf<ACombatProjectileBase> ProjectileClass;
 
-private:
 	int32 CurrentAttackComboCount = 1;
 	int32 UsedAttackComboCount = 1; // For Handle Damage
 
@@ -71,9 +68,10 @@ protected:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
-	virtual UAnimMontage* FindMontageToPlay(TMap<int32, UAnimMontage*>& InAnimMontagesMap) override;
-
 private:
+	UAnimMontage* FindMontageToPlayWithKey(TMap<int32, UAnimMontage*>& InAnimMontagesMap, int32 InKey);
+
+	// Callback function for play montage task
 	UFUNCTION()
 	void OnMontageCompleted();
 
