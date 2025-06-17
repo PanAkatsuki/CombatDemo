@@ -14,6 +14,11 @@
 
 void UEnemyFightComponent::OnHitTargetActor(AActor* HitActor)
 {
+	if (AttackOverlappedActors.Contains(HitActor))
+	{
+		return;
+	}
+
 	Super::OnHitTargetActor(HitActor);
 
 	// Block Check

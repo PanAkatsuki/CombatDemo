@@ -44,19 +44,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Combat|FunctionLibrary", meta = (DisplayName = "Get Pawn Fight Component From Actor", ExpandEnumAsExecs = "OutValidType"))
 	static UPawnFightComponent* BP_GetPawnFightComponentFromActor(AActor* InActor, ECombatValidType& OutValidType);
 
-	//UFUNCTION(BlueprintCallable, Category = "Combat|FunctionLibrary")
 	static bool IsTargetPawnHostile(APawn* QueryPawn, APawn* TargetPawn);
 
 	UFUNCTION(BlueprintPure, Category = "Combat|FunctionLibrary", meta = (CompactNodeTitle = "Get Value At Level"))
 	static float GetScalableFloatValueAtLevel(const FScalableFloat& InScalableFloat, float InLevel = 1.f);
 
-	UFUNCTION(BlueprintPure, Category = "Combat|FunctionLibrary")
 	static FGameplayTag ComputeHitReactDirectionTag(const AActor* InAttacker, const AActor* InVictim, float& OutAngleDifference);
 
-	//UFUNCTION(BlueprintPure, Category = "Combat|FunctionLibrary")
 	static bool IsValidBlock(AActor* InAttacker, AActor* InDefender);
 
-	//UFUNCTION(BlueprintCallable, Category = "Combat|FunctionLibrary")
 	static bool ApplyGameplayEffectSpecHandleToTargetActor(AActor* InInstigator, AActor* InTargetActor, const FGameplayEffectSpecHandle& InSpecHandle);
 
 	// For Calculate Ability Cooldown

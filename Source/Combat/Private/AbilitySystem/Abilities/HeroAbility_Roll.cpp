@@ -7,6 +7,12 @@
 #include "Characters/CombatHeroCharacter.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "MotionWarpingComponent.h"
+#include "TimerManager.h"
+#include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
+#include "CombatGameplayTags.h"
+#include "CombatFunctionLibrary.h"
+#include "Kismet/GameplayStatics.h"
+#include "AbilitySystem/CombatAbilitySystemComponent.h"
 
 #include "CombatDebugHelper.h"
 
@@ -26,8 +32,32 @@ void UHeroAbility_Roll::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
+	PerfectRollTimerDelegate.BindUObject(this, &ThisClass::OnPerfectRollTimerEnd);
+	GetWorld()->GetTimerManager().SetTimer(
+		PerfectRollTimerHandle,
+		PerfectRollTimerDelegate,
+		0.6f,
+		false
+	);
+
+	UCombatFunctionLibrary::AddGameplayTagToActorIfNone(GetHeroCharacterFromActorInfo(), CombatGameplayTags::Shared_Status_Invincible);
+
+	WaitPerfectRollTaskHandle = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
+		this,
+		CombatGameplayTags::Player_Event_PerfectRoll
+	);
+
+	WaitPerfectRollTaskHandle->EventReceived.AddUniqueDynamic(this, &ThisClass::OnEventReceived);
+
+	WaitPerfectRollTaskHandle->ReadyForActivation();
+	
+	ComputeRollDiractionAndDistance();
+
 	check(GetWorld());
-	UKismetSystemLibrary::Delay(GetWorld(), 0.05f, RollLatentInfo);
+	UKismetSystemLibrary::Delay(
+		GetHeroCharacterFromActorInfo(), 
+		0.02f,
+		RollLatentInfo);
 }
 
 void UHeroAbility_Roll::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
@@ -38,7 +68,6 @@ void UHeroAbility_Roll::EndAbility(const FGameplayAbilitySpecHandle Handle, cons
 
 void UHeroAbility_Roll::OnDelayFinished()
 {
-	ComputeRollDiractionAndDistance();
 	SetPlayMontageTask(this, FName("RollMontageTask"), FindMontageToPlayByRandom(AnimMontagesMap));
 }
 
@@ -112,4 +141,38 @@ void UHeroAbility_Roll::OnMontageCancelled()
 {
 	//Debug::Print(TEXT("MontageCancelled"));
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, false, true);
+}
+
+void UHeroAbility_Roll::OnEventReceived(FGameplayEventData InEventData)
+{
+	//Debug::Print(TEXT("PerfectRoll"));
+	// Time Slow
+	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), TimeDilation);
+
+	ACombatHeroCharacter* PlayerCharacter = GetHeroCharacterFromActorInfo();
+	
+	UCombatFunctionLibrary::AddGameplayTagToActorIfNone(PlayerCharacter, CombatGameplayTags::Player_Status_TimeSlow);
+	PlayerCharacter->CustomTimeDilation = 1.0f / TimeDilation;
+
+	GetWorld()->GetTimerManager().SetTimer(
+		GetHeroCharacterFromActorInfo()->TimeStopTimerHandle,
+		GetHeroCharacterFromActorInfo()->TimeStopTimerDelegate,
+		TimeSlowTime,
+		false
+	);
+
+	// Play Gameplay Cue
+	FGameplayCueParameters GameplayCueParameters;
+	GameplayCueParameters.NormalizedMagnitude = 1.f;
+	GameplayCueParameters.Location = CurrentActorInfo->AvatarActor.Get()->GetActorLocation();
+
+	CurrentActorInfo->AbilitySystemComponent->ExecuteGameplayCue(TimeSlowGameplayCueTag, GameplayCueParameters);
+}
+
+void UHeroAbility_Roll::OnPerfectRollTimerEnd()
+{
+	//Debug::Print(TEXT("TimerEnd"));
+	UCombatFunctionLibrary::RemoveGameplayTagFromActorIfFound(GetHeroCharacterFromActorInfo(), CombatGameplayTags::Shared_Status_Invincible);
+
+	WaitPerfectRollTaskHandle->EndTask();
 }

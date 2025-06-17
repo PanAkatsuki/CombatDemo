@@ -78,6 +78,14 @@ void UEnemyAbility_MeleeAttackBase::OnMontageCancelled()
 
 void UEnemyAbility_MeleeAttackBase::OnEventReceived(FGameplayEventData InEventData)
 {
+	// Check Invincible
+	AActor* TargetActor = const_cast<AActor*>(InEventData.Target.Get());
+	if (UCombatFunctionLibrary::NativeDoesActorHaveTag(TargetActor, CombatGameplayTags::Shared_Status_Invincible))
+	{
+		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(TargetActor, CombatGameplayTags::Player_Event_PerfectRoll, InEventData);
+		return;
+	}
+
 	// Play Gameplay Cue
 	FGameplayCueParameters GameplayCueParameters;
 	GameplayCueParameters.NormalizedMagnitude = 1.f;
@@ -92,7 +100,6 @@ void UEnemyAbility_MeleeAttackBase::OnEventReceived(FGameplayEventData InEventDa
 	);
 
 	// Apply Damage Effect Spec To Target
-	AActor* TargetActor = const_cast<AActor*>(InEventData.Target.Get());
 	FActiveGameplayEffectHandle ActiveGameplayEffectHandle = NativeApplyEffectSpecHandleToTarget(TargetActor, DamageEffectSpecHandle);
 
 	if (ActiveGameplayEffectHandle.WasSuccessfullyApplied())

@@ -17,6 +17,8 @@
 #include "Components/UI/HeroUIComponent.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "GameModes/CombatBaseGameMode.h"
+#include "Kismet/GameplayStatics.h"
+#include "CombatFunctionLibrary.h"
 
 #include "CombatDebugHelper.h"
 
@@ -42,6 +44,17 @@ ACombatHeroCharacter::ACombatHeroCharacter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
 
+	AimCameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("AimCameraBoom"));
+	AimCameraBoom->SetupAttachment(GetRootComponent());
+	AimCameraBoom->TargetArmLength = 100.f;
+	AimCameraBoom->SocketOffset = FVector(0.f, 60.f, 80.f);
+	AimCameraBoom->bUsePawnControlRotation = true;
+
+	AimCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("AnimCamera"));
+	AimCamera->SetupAttachment(AimCameraBoom, USpringArmComponent::SocketName);
+	AimCamera->bUsePawnControlRotation = false;
+	AimCamera->bAutoActivate = false;
+
 	// Character Movement Component
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 500.f, 0.f);
@@ -53,6 +66,9 @@ ACombatHeroCharacter::ACombatHeroCharacter()
 
 	// Hero UI Component
 	HeroUIComponent = CreateDefaultSubobject<UHeroUIComponent>(TEXT("HeroUIComponent"));
+
+	// Timer
+	TimeStopTimerDelegate.BindUObject(this, &ThisClass::OnTimeStopTimerEnd);
 }
 
 void ACombatHeroCharacter::PossessedBy(AController* NewController)
@@ -222,4 +238,13 @@ UPawnFightComponent* ACombatHeroCharacter::GetPawnFightComponent() const
 UPawnUIComponent* ACombatHeroCharacter::GetPawnUIComponent() const
 {
 	return HeroUIComponent;
+}
+
+void ACombatHeroCharacter::OnTimeStopTimerEnd()
+{
+	//Debug::Print(TEXT("OnTimeStopTimerEnd"));
+	UCombatFunctionLibrary::RemoveGameplayTagFromActorIfFound(this, CombatGameplayTags::Player_Status_TimeSlow);
+	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f);
+
+	CustomTimeDilation = 1.0f;
 }

@@ -18,7 +18,6 @@ ACombatHeroCharacter* UCombatHeroGameplayAbility::GetHeroCharacterFromActorInfo(
     {
         CachedCombatHeroCharacter = Cast<ACombatHeroCharacter>(CurrentActorInfo->AvatarActor);
     }
-
     check(CachedCombatHeroCharacter.IsValid());
     
     return CachedCombatHeroCharacter.IsValid() ? CachedCombatHeroCharacter.Get() : nullptr;
@@ -30,6 +29,7 @@ ACombatHeroController* UCombatHeroGameplayAbility::GetHeroControllerFromActorInf
     {
         CachedCombatHeroController = Cast<ACombatHeroController>(CurrentActorInfo->PlayerController);
     }
+    check(CachedCombatHeroController.IsValid());
 
     return CachedCombatHeroController.IsValid() ? CachedCombatHeroController.Get() : nullptr;
 }

@@ -4,60 +4,66 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystem/Abilities/CombatHeroGameplayAbility.h"
-#include "HeroAbility_Roll.generated.h"
+#include "HeroAbility_TimeCounter.generated.h"
 
 
-//DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam()
+USTRUCT(BlueprintType)
+struct FTimeCounterTagSet
+{
+	GENERATED_BODY()
 
-class UAbilityTask_WaitGameplayEvent;
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag WeaponHitSoundGameplayCueTag;
+};
+
+USTRUCT(BlueprintType)
+struct FTimeCounterEffectSet
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UGameplayEffect> DealDamageEffectClass;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UGameplayEffect> GainRageEffectClass;
+};
 
 /**
  * 
  */
 UCLASS()
-class COMBAT_API UHeroAbility_Roll : public UCombatHeroGameplayAbility
+class COMBAT_API UHeroAbility_TimeCounter : public UCombatHeroGameplayAbility
 {
 	GENERATED_BODY()
-	
+
 public:
-	UHeroAbility_Roll();
-
+	UHeroAbility_TimeCounter();
+	
 private:
-	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
-	FScalableFloat RollDistanceScalableFloat;
-
 	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
 	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
-	float TimeSlowTime = 0.3f;
+	FTimeCounterTagSet TagSet;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
-	float TimeDilation = 0.05f;
+	FTimeCounterEffectSet EffectSet;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Combat|Ability")
-	FGameplayTag TimeSlowGameplayCueTag;
+	float TimeCounterDistance = 200.f;
 
-	FLatentActionInfo RollLatentInfo;
-
-	// Timer
-	FTimerHandle PerfectRollTimerHandle;
-	FTimerDelegate PerfectRollTimerDelegate;
-
-	// Task Handle
-	UAbilityTask_WaitGameplayEvent* WaitPerfectRollTaskHandle;
-	
 protected:
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;
 	virtual void EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled) override;
 
 private:
-	// Callback funtion for Delay, cus if run ComputeRollDiractionAndDistance after ActivateAbility immediately, 
+	UAnimMontage* FindMontageToPlayWithKey(TMap<int32, UAnimMontage*>& InAnimMontagesMap, int32 InKey);
+	void FindNearestPointAroundTargetAndSetMotionWarping(AActor* SelfActor, AActor* TargetActor, float DesiredDistance);
+
 	UFUNCTION()
-	void OnDelayFinished();
+	void OnRollCompleted();
 
-	void ComputeRollDiractionAndDistance();
-
+	// Callback function for play montage task
 	UFUNCTION()
 	void OnMontageCompleted();
 
@@ -70,9 +76,7 @@ private:
 	UFUNCTION()
 	void OnMontageCancelled();
 
+	// Wait Event Task
 	UFUNCTION()
 	void OnEventReceived(FGameplayEventData InEventData);
-
-	UFUNCTION()
-	void OnPerfectRollTimerEnd();
 };

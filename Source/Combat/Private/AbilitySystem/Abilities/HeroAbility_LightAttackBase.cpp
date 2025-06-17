@@ -99,7 +99,7 @@ void UHeroAbility_LightAttackBase::EndAbility(const FGameplayAbilitySpecHandle H
 
 UAnimMontage* UHeroAbility_LightAttackBase::FindMontageToPlayWithKey(TMap<int32, UAnimMontage*>& InAnimMontagesMap, int32 InKey)
 {
-	UAnimMontage* const* MontagePtr = AnimMontagesMap.Find(CurrentAttackComboCount);
+	UAnimMontage* const* MontagePtr = AnimMontagesMap.Find(InKey);
 
 	return MontagePtr ? *MontagePtr : nullptr;
 }
@@ -130,11 +130,13 @@ void UHeroAbility_LightAttackBase::OnMontageCancelled()
 
 void UHeroAbility_LightAttackBase::OnEventReceived(FGameplayEventData InEventData)
 {
+	AActor* TargetActor = const_cast<AActor*>(InEventData.Target.Get());
+
 	// Play Gameplay Cue
 	FGameplayCueParameters GameplayCueParameters;
 	GameplayCueParameters.NormalizedMagnitude = 1.f;
 	GameplayCueParameters.Location = CurrentActorInfo->AvatarActor.Get()->GetActorLocation();
-
+	
 	CurrentActorInfo->AbilitySystemComponent->ExecuteGameplayCue(TagSet.WeaponHitSoundGameplayCueTag, GameplayCueParameters);
 
 	// Make Damage Effect Spec Handle
@@ -147,7 +149,6 @@ void UHeroAbility_LightAttackBase::OnEventReceived(FGameplayEventData InEventDat
 	);
 
 	// Apply Effect Spec Handle
-	AActor* TargetActor = const_cast<AActor*>(InEventData.Target.Get());
 	FActiveGameplayEffectHandle ActiveGameplayEffectHandle = NativeApplyEffectSpecHandleToTarget(TargetActor, GameplayEffectSpecHandle);
 
 	if (ActiveGameplayEffectHandle.WasSuccessfullyApplied())

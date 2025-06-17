@@ -25,12 +25,17 @@ namespace CombatGameplayTags
 
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_MustBeHeld, TEXT("InputTag.MustBeHeld"));
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_MustBeHeld_Block, TEXT("InputTag.MustBeHeld.Block"));
+	UE_DEFINE_GAMEPLAY_TAG(InputTag_MustBeHeld_Aim, TEXT("InputTag.MustBeHeld.Aim"));
+
+	UE_DEFINE_GAMEPLAY_TAG(InputTag_TimeCounter, TEXT("InputTag.TimeCounter"));
+
 
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_CounterAttack, TEXT("InputTag.CounterAttack"));
 
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_Toggleable, TEXT("InputTag.Toggleable"));
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_Toggleable_TargetLock, TEXT("InputTag.Toggleable.TargetLock"));
 	UE_DEFINE_GAMEPLAY_TAG(InputTag_Toggleable_Rage, TEXT("InputTag.Toggleable.Rage"));
+
 
 
 	/** Player Tags **/
@@ -56,6 +61,10 @@ namespace CombatGameplayTags
 
 	UE_DEFINE_GAMEPLAY_TAG(Player_Ability_HitPause, TEXT("Player.Ability.HitPause"));
 
+	UE_DEFINE_GAMEPLAY_TAG(Player_Ability_Aim, TEXT("Player.Ability.Aim"));
+	UE_DEFINE_GAMEPLAY_TAG(Player_Ability_TimeCounter, TEXT("Player.Ability.TimeCounter"));
+
+
 	// Cooldown
 	UE_DEFINE_GAMEPLAY_TAG(Player_Cooldown_SpecialWeaponAbility_Light, TEXT("Player.Cooldown.SpecialWeaponAbility.Light"));
 	UE_DEFINE_GAMEPLAY_TAG(Player_Cooldown_SpecialWeaponAbility_Heavy, TEXT("Player.Cooldown.SpecialWeaponAbility.Heavy"));
@@ -77,6 +86,11 @@ namespace CombatGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Player_Event_SwithchTarget_Left, TEXT("Player.Event.SwithchTarget.Left"));
 	UE_DEFINE_GAMEPLAY_TAG(Player_Event_SwithchTarget_Right, TEXT("Player.Event.SwithchTarget.Right"));
 
+	UE_DEFINE_GAMEPLAY_TAG(Player_Event_PerfectRoll, TEXT("Player.Event.PerfectRoll"));
+
+	UE_DEFINE_GAMEPLAY_TAG(Player_Event_TimeCounter, TEXT("Player.Event.TimeCounter"));
+
+
 	// Status
 	UE_DEFINE_GAMEPLAY_TAG(Player_Status_JumpToFinisher, TEXT("Player.Status.JumpToFinisher"));
 
@@ -91,6 +105,9 @@ namespace CombatGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Player_Status_Rage_Active, TEXT("Player.Status.Rage.Active"));
 	UE_DEFINE_GAMEPLAY_TAG(Player_Status_Rage_Full, TEXT("Player.Status.Rage.Full"));
 	UE_DEFINE_GAMEPLAY_TAG(Player_Status_Rage_None, TEXT("Player.Status.Rage.None"));
+
+	UE_DEFINE_GAMEPLAY_TAG(Player_Status_TimeSlow, TEXT("Player.Status.TimeSlow"));
+	UE_DEFINE_GAMEPLAY_TAG(Player_Status_TimeCounter, TEXT("Player.Status.TimeCounter"));
 
 	// SetByCaller
 	UE_DEFINE_GAMEPLAY_TAG(Player_SetByCaller_AttackType_Light, TEXT("Player.SetByCaller.AttackType.Light"));

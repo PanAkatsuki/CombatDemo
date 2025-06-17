@@ -12,7 +12,6 @@
 
 void UHeroFightComponent::OnHitTargetActor(AActor* HitActor)
 {
-    // For boss with multiply collision box
     if (AttackOverlappedActors.Contains(HitActor))
     {
         return;
@@ -32,6 +31,10 @@ void UHeroFightComponent::OnHitTargetActor(AActor* HitActor)
     {
         UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(), CombatGameplayTags::Player_Event_SpecialAbilityAttack, EventData);
     }
+    else if (UCombatFunctionLibrary::NativeDoesActorHaveTag(GetOwner(), CombatGameplayTags::Player_Status_TimeCounter))
+    {
+        UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(), CombatGameplayTags::Player_Event_TimeCounter, EventData);
+    }
     else
     {
         UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(), CombatGameplayTags::Shared_Event_MeleeHit, EventData);
@@ -44,7 +47,7 @@ void UHeroFightComponent::OnWeaponPulledFromTargetActor(AActor* InteractedActor)
 {
     Super::OnWeaponPulledFromTargetActor(InteractedActor);
 
-    UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(), CombatGameplayTags::Player_Event_HitPause, FGameplayEventData());
+    //UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(GetOwner(), CombatGameplayTags::Player_Event_HitPause, FGameplayEventData());
 }
 
 ACombatHeroWeapon* UHeroFightComponent::GetHeroCarriedWeaponByTag(FGameplayTag InWeaponTag) const

@@ -9,7 +9,6 @@
 
 #include "CombatGameplayAbility.generated.h"
 
-typedef void (*FunctionType)(FGameplayEventData);
 
 class UPawnFightComponent;
 class UCombatAbilitySystemComponent;

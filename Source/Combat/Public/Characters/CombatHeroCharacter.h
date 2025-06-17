@@ -15,6 +15,7 @@ class UDataAsset_InputConfig;
 struct FInputActionValue;
 class UHeroFightComponent;
 class UHeroUIComponent;
+class ACombatEnemyCharacter;
 
 /**
  * 
@@ -47,6 +48,12 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FollowCamera;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	USpringArmComponent* AimCameraBoom;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	UCameraComponent* AimCamera;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Fight", meta = (AllowPrivateAccess = "true"))
 	UHeroFightComponent* HeroFightComponent;
 
@@ -67,8 +74,18 @@ private:
 	UPROPERTY()
 	FVector2D SwitchDirection = FVector2D::ZeroVector;
 
+public:
+	// Timer
+	FTimerHandle TimeStopTimerHandle;
+	FTimerDelegate TimeStopTimerDelegate;
+
+	TWeakObjectPtr<ACombatEnemyCharacter> TargetInEnemyCharacter;
+
 private:
 	void InitHeroStartUpData();
+
+	/*void StartAiming();
+	void StopAiming();*/
 
 #pragma region Inputs
 
@@ -88,6 +105,8 @@ private:
 public:
 	FORCEINLINE UHeroFightComponent* GetHeroFightComponent() const { return HeroFightComponent; }
 	FORCEINLINE UHeroUIComponent* GetHeroUIComponent() const { return HeroUIComponent; }
+	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	FORCEINLINE UCameraComponent* GetAimCamera() const { return AimCamera; }
 
 	//~ Begin IPawnFightInterface Interface.
 	virtual UPawnFightComponent* GetPawnFightComponent() const override;
@@ -96,4 +115,8 @@ public:
 	//~ Begin IPawnUIInterface Interface.
 	virtual UPawnUIComponent* GetPawnUIComponent() const override;
 	//~ End IPawnUIInterface Interface
+
+public:
+	UFUNCTION()
+	void OnTimeStopTimerEnd();
 };

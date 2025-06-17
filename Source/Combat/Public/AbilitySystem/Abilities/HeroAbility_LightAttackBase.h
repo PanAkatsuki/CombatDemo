@@ -19,6 +19,9 @@ struct FLightAttackTagSet
 
 	UPROPERTY(EditDefaultsOnly)
 	FGameplayTag WeaponHitSoundGameplayCueTag;
+
+	UPROPERTY(EditDefaultsOnly)
+	FGameplayTag BackAttackSoundGameplayCueTag;
 };
 
 USTRUCT(BlueprintType)

@@ -26,6 +26,9 @@ namespace CombatGameplayTags
 
 	COMBAT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InputTag_MustBeHeld);
 	COMBAT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InputTag_MustBeHeld_Block);
+	COMBAT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InputTag_MustBeHeld_Aim);
+
+	COMBAT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InputTag_TimeCounter);
 
 	COMBAT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(InputTag_CounterAttack);
 
@@ -57,6 +60,9 @@ namespace CombatGameplayTags
 
 	COMBAT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Player_Ability_HitPause);
 
+	COMBAT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Player_Ability_Aim);
+	COMBAT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Player_Ability_TimeCounter);
+
 	// Cooldown
 	COMBAT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Player_Cooldown_SpecialWeaponAbility_Light);
 	COMBAT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Player_Cooldown_SpecialWeaponAbility_Heavy);
@@ -78,6 +84,10 @@ namespace CombatGameplayTags
 	COMBAT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Player_Event_SwithchTarget_Left);
 	COMBAT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Player_Event_SwithchTarget_Right);
 
+	COMBAT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Player_Event_PerfectRoll);
+
+	COMBAT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Player_Event_TimeCounter);
+
 	// Status
 	COMBAT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Player_Status_JumpToFinisher);
 
@@ -92,6 +102,9 @@ namespace CombatGameplayTags
 	COMBAT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Player_Status_Rage_Active);
 	COMBAT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Player_Status_Rage_Full);
 	COMBAT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Player_Status_Rage_None);
+
+	COMBAT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Player_Status_TimeSlow);
+	COMBAT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Player_Status_TimeCounter);
 
 	// SetByCaller
 	COMBAT_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Player_SetByCaller_AttackType_Light);

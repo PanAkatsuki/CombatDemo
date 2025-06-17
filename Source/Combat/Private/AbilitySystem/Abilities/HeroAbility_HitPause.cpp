@@ -7,6 +7,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Controllers/CombatHeroController.h"
 #include "CombatGameplayTags.h"
+#include "Characters/CombatHeroCharacter.h"
 
 #include "CombatDebugHelper.h"
 
@@ -32,6 +33,12 @@ void UHeroAbility_HitPause::ActivateAbility(const FGameplayAbilitySpecHandle Han
 {
     Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
+    if (UGameplayStatics::GetGlobalTimeDilation(GetWorld()) != 1.f || GetHeroCharacterFromActorInfo()->CustomTimeDilation != 1.f)
+    {
+        UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.f);
+        GetHeroCharacterFromActorInfo()->CustomTimeDilation = 1.f;
+    }
+
     ActivateHitPauseAbility();
 }
 
@@ -54,8 +61,6 @@ void UHeroAbility_HitPause::ActivateHitPauseAbility()
         return;
     }
 
-    OriginalWorldDilation = World->GetWorldSettings()->TimeDilation;
-
     UGameplayStatics::SetGlobalTimeDilation(World, HitPauseTimeDilation);
 
     UKismetSystemLibrary::Delay(World, DelayDuration, HitPauseLatentActionInfo);
@@ -72,7 +77,7 @@ void UHeroAbility_HitPause::OnHitPauseDelayFinished()
         return;
     }
 
-    UGameplayStatics::SetGlobalTimeDilation(World, OriginalWorldDilation);
+    UGameplayStatics::SetGlobalTimeDilation(World, 1.f);
 
     GetHeroControllerFromActorInfo()->ClientStartCameraShake(CameraShakeClass);
 
