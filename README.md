@@ -8,7 +8,7 @@ A third-person action combat demo developed with **Unreal Engine 5.5.4**.
 
 **WarriorCombat** is an Unreal Engine 5 project focused on building responsive melee combat mechanics with modern design patterns. This prototype explores core gameplay systems such as combo attacks, lock-on targeting, animation-driven combat, and enemy AI.
 
-Developed by **Xiaoyu Zhang** and inspired by the tutorial from [Vince Petrelli](https://www.udemy.com/course/unreal-engine-5-advanced-action-rpg/), this project also serves as a study and demonstration of Unreal's Gameplay Ability System (GAS), character states, and animation integration in a C++-driven workflow.
+Developed by **Xiaoyu Zhang** and inspired by the tutorial from [Vince Petrelli](https://www.udemy.com/course/unreal-engine-5-advanced-action-rpg/), this project also serves as a study and demonstration of Unreal's Gameplay Ability System (GAS), character states, and animation integration in a C++ driven workflow.
 
 ---
 
@@ -121,3 +121,5 @@ This project is intended for personal, educational, and demonstration purposes o
 ## 🙏 Acknowledgments
 
 - Vince Petrelli for the UE5 tutorial.
+
+---
